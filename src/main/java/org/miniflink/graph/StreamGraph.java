@@ -1,6 +1,7 @@
 package org.miniflink.graph;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /** 逻辑图：收集所有 transformation 与 sink 节点。 */
@@ -17,10 +18,10 @@ public class StreamGraph {
     }
 
     public List<Transformation<?>> getTransformations() {
-        return transformations;
+        return Collections.unmodifiableList(transformations);
     }
 
     public List<Transformation<?>> getSinks() {
-        return sinks;
+        return Collections.unmodifiableList(sinks);
     }
 }

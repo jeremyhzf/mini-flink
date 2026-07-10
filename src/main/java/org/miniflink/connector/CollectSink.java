@@ -21,6 +21,6 @@ public class CollectSink<T> implements SinkFunction<T> {
     }
 
     public List<T> getResults() {
-        return results;
+        return Collections.unmodifiableList(results);
     }
 }
