@@ -34,6 +34,9 @@ public class DataStream<T> {
 
     /** 设置当前 transformation 的并行度。 */
     public DataStream<T> setParallelism(int parallelism) {
+        if (parallelism < 1) {
+            throw new IllegalArgumentException("parallelism 必须 >= 1: " + parallelism);
+        }
         transformation.setParallelism(parallelism);
         return this;
     }

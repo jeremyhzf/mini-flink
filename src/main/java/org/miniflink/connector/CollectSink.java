@@ -20,7 +20,8 @@ public class CollectSink<T> implements SinkFunction<T> {
         results.add(value);
     }
 
+    /** 返回内部结果的独立快照副本：与内部 List 隔离，执行期间迭代不会触发 CME。 */
     public List<T> getResults() {
-        return Collections.unmodifiableList(results);
+        return new ArrayList<>(results);
     }
 }

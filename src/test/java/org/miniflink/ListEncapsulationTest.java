@@ -9,6 +9,7 @@ import org.miniflink.runtime.operator.SourceOperatorImpl;
 
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ListEncapsulationTest {
@@ -23,9 +24,15 @@ class ListEncapsulationTest {
     }
 
     @Test
-    void CollectSink的getResults返回不可变视图() {
+    void CollectSink的getResults返回与内部隔离的独立快照() {
         CollectSink<Integer> sink = new CollectSink<>();
         sink.add(1);
-        assertThrows(UnsupportedOperationException.class, () -> sink.getResults().add(2));
+        List<Integer> snapshot = sink.getResults();
+        assertEquals(List.of(1), snapshot);   // 快照含已写入元素
+        sink.add(2);                          // 此后追加 2
+        assertEquals(List.of(1), snapshot);   // 取过的快照不含 2（与内部隔离）
+        // 快照是可变副本：改动不影响内部
+        snapshot.add(99);
+        assertEquals(List.of(1, 2), sink.getResults());
     }
 }

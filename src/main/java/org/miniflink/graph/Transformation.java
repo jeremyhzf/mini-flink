@@ -24,6 +24,9 @@ public abstract class Transformation<T> {
     }
 
     public void setParallelism(int parallelism) {
+        if (parallelism < 1) {
+            throw new IllegalArgumentException("parallelism 必须 >= 1: " + parallelism);
+        }
         this.parallelism = parallelism;
     }
 }
