@@ -1,9 +1,11 @@
 package org.miniflink.api;
 
 import org.miniflink.connector.CollectionSource;
+import org.miniflink.execution.ExecutionGraph;
 import org.miniflink.graph.SourceTransformation;
 import org.miniflink.graph.StreamGraph;
 import org.miniflink.graph.Transformation;
+import org.miniflink.runtime.StreamExecutor;
 import org.miniflink.runtime.operator.SourceOperatorImpl;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -36,8 +38,9 @@ public class StreamExecutionEnvironment {
         return streamGraph;
     }
 
-    /** 编译逻辑图并执行。运行逻辑在 Task 7（ExecutionGraph + StreamExecutor）补全。 */
+    /** 编译逻辑图（StreamGraph → ExecutionGraph）并同步执行。 */
     public void execute(String jobName) throws Exception {
-        throw new UnsupportedOperationException("execute 将在 Task 7 实现");
+        ExecutionGraph execGraph = ExecutionGraph.from(streamGraph);
+        new StreamExecutor().execute(execGraph);
     }
 }
