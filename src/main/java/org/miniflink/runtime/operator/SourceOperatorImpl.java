@@ -2,6 +2,7 @@ package org.miniflink.runtime.operator;
 
 import org.miniflink.api.function.SourceFunction;
 import org.miniflink.runtime.Collector;
+import org.miniflink.runtime.RuntimeContext;
 import org.miniflink.runtime.SourceContext;
 import org.miniflink.runtime.SourceContextImpl;
 import org.miniflink.runtime.SourceOperator;
@@ -16,8 +17,8 @@ public class SourceOperatorImpl<OUT> implements SourceOperator<OUT> {
     }
 
     @Override
-    public void open(Collector<OUT> out, int subtaskIndex, int parallelism) {
-        this.ctx = new SourceContextImpl<>(out, subtaskIndex, parallelism);
+    public void open(Collector<OUT> out, RuntimeContext ctx) {
+        this.ctx = new SourceContextImpl<>(out, ctx.getSubtaskIndex(), ctx.getParallelism());
     }
 
     @Override

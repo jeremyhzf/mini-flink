@@ -20,7 +20,7 @@ class OperatorChainTest {
                 new FilterOperator<>((FilterFunction<Integer>) x -> x > 2)
         ));
         ListCollector<Integer> out = new ListCollector<>();
-        chain.open(out);
+        chain.open(out, new RuntimeContextImpl(0, 1, null));
 
         chain.processElement(1); // 1->2，2>2 false，丢弃
         chain.processElement(2); // 2->3，3>2 true，输出 3

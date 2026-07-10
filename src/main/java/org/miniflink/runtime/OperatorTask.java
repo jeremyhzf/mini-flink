@@ -2,34 +2,29 @@ package org.miniflink.runtime;
 
 import java.util.List;
 
-/**
- * 处理算子的执行单元：open chain → 循环从输入 Channel 读 → Record 经 chain 处理 → EOB 则计数--。
- * pendingUpstreams 归零（所有上游都 EOB）后向下游广播 EOB 并退出（fan-in 引用计数对齐）。
- */
+/** 处理算子执行单元：open chain → 循环读 Channel → Record 经 chain 处理 → EOB 计数；归零广播 EOB。 */
 public class OperatorTask implements Task {
     private final OperatorChain<?, ?> chain;
     private final Channel input;
     private final int pendingUpstreams;
     private final List<Output> outputs;
-    private final int subtaskIndex;
+    private final RuntimeContext ctx;
 
     public OperatorTask(OperatorChain<?, ?> chain, Channel input, int pendingUpstreams,
-                        List<Output> outputs, int subtaskIndex) {
+                        List<Output> outputs, RuntimeContext ctx) {
         this.chain = chain;
         this.input = input;
         this.pendingUpstreams = pendingUpstreams;
         this.outputs = outputs;
-        this.subtaskIndex = subtaskIndex;
+        this.ctx = ctx;
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
     public void run() {
-        Collector outCollector = outputs.isEmpty() ? new NoopCollector<>() : new OutputCollector(outputs, subtaskIndex);
+        Collector outCollector = outputs.isEmpty() ? new NoopCollector<>() : new OutputCollector(outputs, ctx.getSubtaskIndex());
         try {
-            chain.open((Collector) outCollector);
-            // chain(IN=?) 与 Record(value=?) 各持独立的通配符 capture，互不兼容，
-            // 经 raw OperatorChain 调用绕过泛型检查（运行时类型由算子链保证安全）。
+            chain.open((Collector) outCollector, ctx);
             @SuppressWarnings("rawtypes")
             OperatorChain rawChain = chain;
             int remaining = pendingUpstreams;
@@ -41,7 +36,7 @@ public class OperatorTask implements Task {
                     rawChain.processElement(r.value());
                 }
             }
-            broadcastEob(outputs, subtaskIndex); // 所有上游结束，向下游广播
+            broadcastEob(outputs, ctx.getSubtaskIndex());
         } catch (InterruptedException ie) {
             Thread.currentThread().interrupt();
         } catch (Exception e) {

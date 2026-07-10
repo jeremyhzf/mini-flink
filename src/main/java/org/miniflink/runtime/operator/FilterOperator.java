@@ -3,6 +3,7 @@ package org.miniflink.runtime.operator;
 import org.miniflink.api.function.FilterFunction;
 import org.miniflink.runtime.Collector;
 import org.miniflink.runtime.Operator;
+import org.miniflink.runtime.RuntimeContext;
 
 /** 包装 FilterFunction 的算子：仅转发满足条件的元素。 */
 public class FilterOperator<IN> implements Operator<IN, IN> {
@@ -14,7 +15,7 @@ public class FilterOperator<IN> implements Operator<IN, IN> {
     }
 
     @Override
-    public void open(Collector<IN> out) {
+    public void open(Collector<IN> out, RuntimeContext ctx) {
         this.out = out;
     }
 

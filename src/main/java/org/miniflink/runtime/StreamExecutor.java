@@ -26,16 +26,18 @@ public class StreamExecutor {
             }
         }
 
-        // 2. 为每个 vertex 建 Task
+        // 2. 为每个 vertex 建 RuntimeContext + Task
         List<Task> tasks = new ArrayList<>();
         for (ExecutionVertex v : graph.getVertices()) {
+            RuntimeContext ctx = new RuntimeContextImpl(
+                    v.getSubtaskIndex(), v.getParallelism(), findInputKeySelector(v, graph.getEdges()));
             List<Output> outputs = buildOutputs(v, graph.getEdges(), inputChannelOf);
             if (v.isSource()) {
-                tasks.add(new SourceTask(v.getSourceOperator(), outputs, v.getSubtaskIndex(), v.getParallelism()));
+                tasks.add(new SourceTask(v.getSourceOperator(), outputs, ctx));
             } else {
                 Channel input = inputChannelOf.get(v);
                 int pending = countUpstreams(v, graph.getEdges());
-                tasks.add(new OperatorTask(new OperatorChain<>(v.getOperators()), input, pending, outputs, v.getSubtaskIndex()));
+                tasks.add(new OperatorTask(new OperatorChain<>(v.getOperators()), input, pending, outputs, ctx));
             }
         }
 
@@ -87,5 +89,16 @@ public class StreamExecutor {
             }
         }
         return pending;
+    }
+
+    /** 取 vertex 入边的 keySelector（keyed 算子非 null；单线性链每 vertex 最多一条入边）。 */
+    private org.miniflink.api.function.KeySelector<?, ?> findInputKeySelector(
+            ExecutionVertex v, List<ExecutionEdge> edges) {
+        for (ExecutionEdge edge : edges) {
+            if (edge.getTargets().contains(v)) {
+                return edge.getKeySelector();
+            }
+        }
+        return null;
     }
 }

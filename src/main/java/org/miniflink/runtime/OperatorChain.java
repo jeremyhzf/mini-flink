@@ -19,12 +19,12 @@ public class OperatorChain<IN, OUT> {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public void open(Collector<OUT> output) {
+    public void open(Collector<OUT> output, RuntimeContext ctx) {
         Collector current = output;
         // 从尾到头：每个算子 open(它的输出)，然后它的输出 = ChainCollector(它)，供上游 open
         for (int i = operators.size() - 1; i >= 0; i--) {
             Operator op = operators.get(i);
-            op.open(current);
+            op.open(current, ctx);
             current = new ChainCollector(op);
         }
     }

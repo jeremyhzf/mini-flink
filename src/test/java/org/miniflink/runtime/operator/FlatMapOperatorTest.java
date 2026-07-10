@@ -3,6 +3,7 @@ package org.miniflink.runtime.operator;
 import org.junit.jupiter.api.Test;
 import org.miniflink.api.function.FlatMapFunction;
 import org.miniflink.runtime.ListCollector;
+import org.miniflink.runtime.RuntimeContextImpl;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -18,7 +19,7 @@ class FlatMapOperatorTest {
                     }
                 });
         ListCollector<String> downstream = new ListCollector<>();
-        op.open(downstream);
+        op.open(downstream, new RuntimeContextImpl(0, 1, null));
 
         op.processElement("hello world");
         op.processElement("mini flink");

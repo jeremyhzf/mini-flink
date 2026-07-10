@@ -23,7 +23,7 @@ class OperatorTaskTest {
         Channel outCh = new Channel(8);
         Output out = new Output(List.of(outCh), new ForwardPartitioner(), null);
 
-        new OperatorTask(chain, input, 1, List.of(out), 0).run();
+        new OperatorTask(chain, input, 1, List.of(out), new RuntimeContextImpl(0, 1, null)).run();
 
         assertEquals(10, ((Record<Integer>) outCh.receive()).value());
         assertEquals(20, ((Record<Integer>) outCh.receive()).value());
@@ -43,7 +43,7 @@ class OperatorTaskTest {
         Channel outCh = new Channel(8);
         Output out = new Output(List.of(outCh), new ForwardPartitioner(), null);
 
-        new OperatorTask(chain, input, 2, List.of(out), 0).run(); // pendingUpstreams=2
+        new OperatorTask(chain, input, 2, List.of(out), new RuntimeContextImpl(0, 1, null)).run(); // pendingUpstreams=2
 
         // 收到第 1 个 EOB 不退出，继续处理 2，收到第 2 个 EOB 才广播
         assertEquals(1, ((Record<Integer>) outCh.receive()).value());

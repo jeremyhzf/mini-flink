@@ -3,6 +3,7 @@ package org.miniflink.runtime.operator;
 import org.miniflink.api.function.SinkFunction;
 import org.miniflink.runtime.Collector;
 import org.miniflink.runtime.Operator;
+import org.miniflink.runtime.RuntimeContext;
 
 /** 包装 SinkFunction 的算子：到达元素交给 sink 消费，无下游输出（OUT = Void）。 */
 public class SinkOperator<IN> implements Operator<IN, Void> {
@@ -13,8 +14,8 @@ public class SinkOperator<IN> implements Operator<IN, Void> {
     }
 
     @Override
-    public void open(Collector<Void> out) {
-        // sink 无下游输出
+    public void open(Collector<Void> out, RuntimeContext ctx) {
+        // sink 无下游输出，ctx 暂不使用
     }
 
     @Override

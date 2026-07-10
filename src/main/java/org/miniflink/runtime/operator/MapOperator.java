@@ -3,6 +3,7 @@ package org.miniflink.runtime.operator;
 import org.miniflink.api.function.MapFunction;
 import org.miniflink.runtime.Collector;
 import org.miniflink.runtime.Operator;
+import org.miniflink.runtime.RuntimeContext;
 
 /** 包装 MapFunction 的算子。 */
 public class MapOperator<IN, OUT> implements Operator<IN, OUT> {
@@ -14,7 +15,7 @@ public class MapOperator<IN, OUT> implements Operator<IN, OUT> {
     }
 
     @Override
-    public void open(Collector<OUT> out) {
+    public void open(Collector<OUT> out, RuntimeContext ctx) {
         this.out = out;
     }
 

@@ -17,7 +17,7 @@ class SourceTaskTest {
         Output out = new Output(List.of(ch), new ForwardPartitioner(), null);
         SourceTask task = new SourceTask(
                 new SourceOperatorImpl<>(new CollectionSource<>(List.of("a", "b"))),
-                List.of(out), 0, 1);
+                List.of(out), new RuntimeContextImpl(0, 1, null));
 
         task.run(); // 单线程直接驱动
 
