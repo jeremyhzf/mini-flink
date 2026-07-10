@@ -6,7 +6,6 @@ import org.miniflink.api.function.KeySelector;
 import org.miniflink.api.function.MapFunction;
 import org.miniflink.api.function.SinkFunction;
 import org.miniflink.execution.ForwardPartitioner;
-import org.miniflink.execution.HashPartitioner;
 import org.miniflink.execution.Partitioner;
 import org.miniflink.graph.OneInputTransformation;
 import org.miniflink.graph.Transformation;
@@ -16,7 +15,7 @@ import org.miniflink.runtime.operator.FlatMapOperator;
 import org.miniflink.runtime.operator.MapOperator;
 import org.miniflink.runtime.operator.SinkOperator;
 
-/** 流抽象：链式调用算子方法。keyBy 设置下一条边的分区器；setParallelism 设并行度。 */
+/** 流抽象：链式调用算子方法。keyBy 返回 KeyedStream 提供 keyed 聚合；setParallelism 设并行度。 */
 public class DataStream<T> {
     private final StreamExecutionEnvironment env;
     private final Transformation<T> transformation;
@@ -41,12 +40,9 @@ public class DataStream<T> {
         return this;
     }
 
-    /** 按key分区：使下一个算子的入边用 hash 分区。返回的流与原流共享同一 transformation。 */
-    public DataStream<T> keyBy(KeySelector<T, ?> keySelector) {
-        DataStream<T> keyed = new DataStream<>(env, transformation);
-        keyed.nextPartitioner = new HashPartitioner();
-        keyed.nextKeySelector = keySelector;
-        return keyed;
+    /** 按 key 分区：返回 KeyedStream，提供 keyed 聚合操作（reduce/sum）。 */
+    public <K> KeyedStream<T, K> keyBy(KeySelector<T, K> keySelector) {
+        return new KeyedStream<>(this, keySelector);
     }
 
     public <O> DataStream<O> map(MapFunction<T, O> mapper) {
@@ -74,5 +70,15 @@ public class DataStream<T> {
                 env.getNewNodeId(), name, transformation, operator, part, nextKeySelector);
         env.addTransformation(tx);
         return new DataStream<>(env, tx); // 新流重置为 forward（不继承 keyBy）
+    }
+
+    /** 供 KeyedStream 使用：建一个带指定分区器与 keySelector 的 transformation。 */
+    <O> DataStream<O> keyedTransform(String name, Operator<T, O> operator,
+                                     org.miniflink.execution.Partitioner partitioner,
+                                     KeySelector<T, ?> keySelector) {
+        OneInputTransformation<T, O> tx = new OneInputTransformation<>(
+                env.getNewNodeId(), name, transformation, operator, partitioner, keySelector);
+        env.addTransformation(tx);
+        return new DataStream<>(env, tx);
     }
 }

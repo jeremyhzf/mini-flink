@@ -2,6 +2,8 @@ package org.miniflink.api;
 
 import org.junit.jupiter.api.Test;
 import org.miniflink.api.function.KeySelector;
+import org.miniflink.api.function.ReduceFunction;
+import org.miniflink.execution.ForwardPartitioner;
 import org.miniflink.execution.HashPartitioner;
 import org.miniflink.graph.OneInputTransformation;
 
@@ -12,24 +14,25 @@ import static org.junit.jupiter.api.Assertions.*;
 class DataStreamKeyByTest {
 
     @Test
-    void keyBy应使下一个算子入边用hash分区() {
+    void keyBy后reduce使用hash分区() {
         StreamExecutionEnvironment env = new StreamExecutionEnvironment();
-        DataStream<Integer> keyed = env.fromCollection(List.of(1, 2, 3)).keyBy((KeySelector<Integer, Integer>) x -> x);
-        DataStream<Integer> mapped = keyed.map(x -> x);
-
-        OneInputTransformation<?, ?> mapTx = (OneInputTransformation<?, ?>) mapped.getTransformation();
-        assertInstanceOf(HashPartitioner.class, mapTx.getPartitioner());
-        assertNotNull(mapTx.getKeySelector());
+        DataStream<Integer> reduced = env.fromCollection(List.of(1, 2, 3))
+                .keyBy((KeySelector<Integer, Integer>) x -> x)
+                .reduce((ReduceFunction<Integer>) (a, b) -> a + b);
+        OneInputTransformation<?, ?> tx = (OneInputTransformation<?, ?>) reduced.getTransformation();
+        assertInstanceOf(HashPartitioner.class, tx.getPartitioner());
+        assertNotNull(tx.getKeySelector());
     }
 
     @Test
-    void keyBy后非keyBy算子应恢复forward() {
+    void reduce后的普通算子恢复forward() {
         StreamExecutionEnvironment env = new StreamExecutionEnvironment();
-        DataStream<Integer> s = env.fromCollection(List.of(1, 2, 3)).keyBy((KeySelector<Integer, Integer>) x -> x).map(x -> x);
-        DataStream<Integer> m2 = s.map(x -> x); // 不再 keyBy
-
-        OneInputTransformation<?, ?> tx = (OneInputTransformation<?, ?>) m2.getTransformation();
-        assertInstanceOf(org.miniflink.execution.ForwardPartitioner.class, tx.getPartitioner());
+        DataStream<Integer> s = env.fromCollection(List.of(1, 2, 3))
+                .keyBy((KeySelector<Integer, Integer>) x -> x)
+                .reduce((ReduceFunction<Integer>) (a, b) -> a + b);
+        DataStream<Integer> mapped = s.map(x -> x);
+        OneInputTransformation<?, ?> tx = (OneInputTransformation<?, ?>) mapped.getTransformation();
+        assertInstanceOf(ForwardPartitioner.class, tx.getPartitioner());
     }
 
     @Test
