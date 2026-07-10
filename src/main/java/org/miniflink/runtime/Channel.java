@@ -30,4 +30,9 @@ public class Channel {
     public StreamElement receive() throws InterruptedException {
         return queue.take();
     }
+
+    /** 队列是否为空（仅供测试/观测用）。 */
+    public boolean isEmpty() {
+        return queue.isEmpty();
+    }
 }

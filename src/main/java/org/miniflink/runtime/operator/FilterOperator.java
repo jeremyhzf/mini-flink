@@ -29,4 +29,9 @@ public class FilterOperator<IN> implements Operator<IN, IN> {
     public void close() {
         // 阶段①无需操作
     }
+
+    @Override
+    public FilterOperator<IN> copy() {
+        return new FilterOperator<>(filterFunction);
+    }
 }

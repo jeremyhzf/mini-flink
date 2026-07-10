@@ -29,4 +29,9 @@ public class SourceOperatorImpl<OUT> implements SourceOperator<OUT> {
     public void close() {
         // 阶段②无需操作
     }
+
+    @Override
+    public SourceOperatorImpl<OUT> copy() {
+        return new SourceOperatorImpl<>(sourceFunction);
+    }
 }

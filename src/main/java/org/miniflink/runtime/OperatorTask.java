@@ -41,7 +41,7 @@ public class OperatorTask implements Task {
                     rawChain.processElement(r.value());
                 }
             }
-            broadcastEob(outputs); // 所有上游结束，向下游广播
+            broadcastEob(outputs, subtaskIndex); // 所有上游结束，向下游广播
         } catch (InterruptedException ie) {
             Thread.currentThread().interrupt();
         } catch (Exception e) {

@@ -26,4 +26,9 @@ public class SinkOperator<IN> implements Operator<IN, Void> {
     public void close() {
         // 阶段①无需操作
     }
+
+    @Override
+    public SinkOperator<IN> copy() {
+        return new SinkOperator<>(sinkFunction);
+    }
 }

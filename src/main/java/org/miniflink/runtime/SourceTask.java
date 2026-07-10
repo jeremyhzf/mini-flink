@@ -26,7 +26,7 @@ public class SourceTask implements Task {
         try {
             sourceOperator.open((Collector) out, subtaskIndex, parallelism);
             sourceOperator.run();
-            broadcastEob(outputs); // 正常结束才广播
+            broadcastEob(outputs, subtaskIndex); // 正常结束才广播
         } catch (InterruptedException ie) {
             Thread.currentThread().interrupt();
         } catch (Exception e) {

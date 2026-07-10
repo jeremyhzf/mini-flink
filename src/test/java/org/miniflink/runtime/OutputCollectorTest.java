@@ -3,6 +3,7 @@ package org.miniflink.runtime;
 import org.junit.jupiter.api.Test;
 import org.miniflink.execution.ForwardPartitioner;
 import org.miniflink.execution.HashPartitioner;
+import org.miniflink.execution.RebalancePartitioner;
 
 import java.util.List;
 
@@ -38,12 +39,24 @@ class OutputCollectorTest {
     }
 
     @Test
-    void sendEob应向所有下游通道发EOB() throws Exception {
+    void forward的sendEob只发往上游对应下游通道() throws Exception {
         Channel c0 = new Channel(2);
         Channel c1 = new Channel(2);
         Output out = new Output(List.of(c0, c1), new ForwardPartitioner(), null);
 
-        out.sendEob();
+        out.sendEob(0); // 上游 0 → 仅 c0
+
+        assertInstanceOf(EndOfBroadcast.class, c0.receive());
+        assertTrue(c1.isEmpty(), "forward 下游 1 不应收到上游 0 的 EOB");
+    }
+
+    @Test
+    void rebalance的sendEob向所有下游通道广播EOB() throws Exception {
+        Channel c0 = new Channel(2);
+        Channel c1 = new Channel(2);
+        Output out = new Output(List.of(c0, c1), new RebalancePartitioner(), null);
+
+        out.sendEob(0); // fan-out：每个下游都要对齐该上游的结束
 
         assertInstanceOf(EndOfBroadcast.class, c0.receive());
         assertInstanceOf(EndOfBroadcast.class, c1.receive());

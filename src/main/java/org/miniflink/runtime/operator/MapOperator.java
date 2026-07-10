@@ -28,4 +28,9 @@ public class MapOperator<IN, OUT> implements Operator<IN, OUT> {
     public void close() {
         // 阶段①无需操作
     }
+
+    @Override
+    public MapOperator<IN, OUT> copy() {
+        return new MapOperator<>(mapFunction);
+    }
 }

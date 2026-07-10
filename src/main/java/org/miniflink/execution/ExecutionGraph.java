@@ -84,16 +84,23 @@ public class ExecutionGraph {
             groups.add(new Group(false, null, new ArrayList<>(curOps), curParallelism, curPart, curKey));
         }
 
-        // 按 parallelism 展开
+        // 按 parallelism 展开；每个 subtask 复制独立算子实例（多 subtask 共享会踩踏 open 写入的 per-subtask 状态）
         int id = 0;
         List<List<ExecutionVertex>> groupVerts = new ArrayList<>();
         List<ExecutionVertex> allVerts = new ArrayList<>();
         for (Group g : groups) {
             List<ExecutionVertex> verts = new ArrayList<>();
             for (int i = 0; i < g.parallelism; i++) {
-                ExecutionVertex v = g.isSource
-                        ? new ExecutionVertex(id++, i, g.parallelism, List.of(), g.source)
-                        : new ExecutionVertex(id++, i, g.parallelism, g.operators, null);
+                ExecutionVertex v;
+                if (g.isSource) {
+                    v = new ExecutionVertex(id++, i, g.parallelism, List.of(), g.source.copy());
+                } else {
+                    List<Operator<?, ?>> ops = new ArrayList<>();
+                    for (Operator<?, ?> op : g.operators) {
+                        ops.add(op.copy());
+                    }
+                    v = new ExecutionVertex(id++, i, g.parallelism, ops, null);
+                }
                 verts.add(v);
                 allVerts.add(v);
             }

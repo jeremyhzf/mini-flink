@@ -27,4 +27,9 @@ public class FlatMapOperator<IN, OUT> implements Operator<IN, OUT> {
     public void close() {
         // 阶段①无需操作
     }
+
+    @Override
+    public FlatMapOperator<IN, OUT> copy() {
+        return new FlatMapOperator<>(flatMapFunction);
+    }
 }
