@@ -14,7 +14,7 @@ class SourceOperatorImplTest {
     void run应把源数据全部输出到下游() throws Exception {
         SourceOperatorImpl<String> op = new SourceOperatorImpl<>(new CollectionSource<>(List.of("x", "y", "z")));
         ListCollector<String> downstream = new ListCollector<>();
-        op.open(downstream);
+        op.open(downstream, 0, 1);
 
         op.run();
 

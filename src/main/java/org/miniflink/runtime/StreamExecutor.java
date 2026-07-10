@@ -42,7 +42,7 @@ public class StreamExecutor {
         Collector sourceOut = (n == 0) ? new NoopCollector<>() : new OperatorOutput(operators.get(0));
         @SuppressWarnings("unchecked")
         Collector<Object> typedSourceOut = (Collector<Object>) sourceOut;
-        source.open(typedSourceOut);
+        source.open(typedSourceOut, 0, 1);
 
         try {
             source.run();

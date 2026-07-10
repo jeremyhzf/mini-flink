@@ -6,7 +6,7 @@ import org.miniflink.runtime.SourceContext;
 import org.miniflink.runtime.SourceContextImpl;
 import org.miniflink.runtime.SourceOperator;
 
-/** 包装 SourceFunction 的 source 算子：run 时把 SourceContext 交给用户函数。 */
+/** 包装 SourceFunction 的 source 算子：open 建 SourceContextImpl（带并行位置），run 调用用户函数。 */
 public class SourceOperatorImpl<OUT> implements SourceOperator<OUT> {
     private final SourceFunction<OUT> sourceFunction;
     private SourceContext<OUT> ctx;
@@ -16,8 +16,8 @@ public class SourceOperatorImpl<OUT> implements SourceOperator<OUT> {
     }
 
     @Override
-    public void open(Collector<OUT> out) {
-        this.ctx = new SourceContextImpl<>(out);
+    public void open(Collector<OUT> out, int subtaskIndex, int parallelism) {
+        this.ctx = new SourceContextImpl<>(out, subtaskIndex, parallelism);
     }
 
     @Override
@@ -27,6 +27,6 @@ public class SourceOperatorImpl<OUT> implements SourceOperator<OUT> {
 
     @Override
     public void close() {
-        // 阶段①无需操作
+        // 阶段②无需操作
     }
 }
