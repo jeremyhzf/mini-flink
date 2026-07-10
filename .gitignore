@@ -1,0 +1,14 @@
+# Maven 构建产物
+target/
+
+# IDE 文件
+.idea/
+*.iml
+.vscode/
+.project
+.classpath
+.settings/
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
