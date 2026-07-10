@@ -29,3 +29,21 @@ env.execute("text-processing");
 
 - 已实现：source / map / flatMap / filter / sink、单线性链、同步执行。
 - 未实现（后续阶段）：并行多线程、keyBy 与 keyed state、窗口与 watermark、checkpoint。
+
+## 独立运行（带 main 的可运行版本）
+
+除了上文测试形式，还有可直接运行、打印结果的版本：`org.miniflink.examples.TextProcessingExample`。
+
+```bash
+mvn compile exec:java
+```
+
+输出：
+
+```
+输入        : ["hello world", "hi there", "go"]
+处理结果    : [HELLO, WORLD, THERE]
+预期        : [HELLO, WORLD, THERE]
+```
+
+> 注：`exec:java` 不会自动编译，需配合 `compile`（或先 `mvn compile`）。pom 已通过 `exec-maven-plugin` 配置默认主类为该示例。
