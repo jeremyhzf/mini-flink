@@ -142,7 +142,7 @@ class MemoryStateBackendTest {
         assertIterableEquals(java.util.List.of("x", "y"), state.get());
 
         backend.setCurrentKey("b");
-        assertNull(state.get());          // 新 key 无数据
+        assertIterableEquals(java.util.List.of(), state.get());  // 新 key 无数据（空 list，Flink ListState 语义）
     }
 
     @Test
