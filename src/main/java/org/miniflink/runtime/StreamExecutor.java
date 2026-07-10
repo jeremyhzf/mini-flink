@@ -1,61 +1,91 @@
 package org.miniflink.runtime;
 
+import org.miniflink.execution.ExecutionEdge;
 import org.miniflink.execution.ExecutionGraph;
+import org.miniflink.execution.ExecutionVertex;
+import org.miniflink.execution.ForwardPartitioner;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * 阶段①同步执行器：把 source 与算子链用 OperatorOutput 串成同步链，
- * open 全部算子后调用 source.run() 触发数据流动，最后统一 close。
- *
- * 注：为避免泛型噪声，链组装使用 raw type + 受检转换；阶段②引入多线程时会重构为 Task。
+ * 多线程执行器：为每个 ExecutionVertex 建 Task，Task 间用 Channel 连接，启动线程并 join 等待。
+ * 任一 Task 未捕获异常 → 记录并在 join 后抛出。
  */
 public class StreamExecutor {
 
     public void execute(ExecutionGraph graph) throws Exception {
-        @SuppressWarnings("rawtypes")
-        SourceOperator source = graph.getSource();
-        List<Operator<?, ?>> operators = graph.getOperators();
-        int n = operators.size();
+        // 1. 为每个 target vertex 建输入 Channel（fan-in 汇聚）
+        Map<ExecutionVertex, Channel> inputChannelOf = new HashMap<>();
+        for (ExecutionEdge edge : graph.getEdges()) {
+            for (ExecutionVertex t : edge.getTargets()) {
+                inputChannelOf.computeIfAbsent(t, k -> new Channel());
+            }
+        }
 
-        // 为每个算子准备它的输出 Collector：
-        // 最后一个算子（sink）→ NoopCollector；其余 → OperatorOutput(下一个算子)
-        @SuppressWarnings("rawtypes")
-        Collector[] outputs = new Collector[n];
-        for (int i = n - 1; i >= 0; i--) {
-            if (i == n - 1) {
-                outputs[i] = new NoopCollector<>();
+        // 2. 为每个 vertex 建 Task
+        List<Task> tasks = new ArrayList<>();
+        for (ExecutionVertex v : graph.getVertices()) {
+            List<Output> outputs = buildOutputs(v, graph.getEdges(), inputChannelOf);
+            if (v.isSource()) {
+                tasks.add(new SourceTask(v.getSourceOperator(), outputs, v.getSubtaskIndex(), v.getParallelism()));
             } else {
-                outputs[i] = new OperatorOutput<>(operators.get(i + 1));
+                Channel input = inputChannelOf.get(v);
+                int pending = countUpstreams(v, graph.getEdges());
+                tasks.add(new OperatorTask(new OperatorChain<>(v.getOperators()), input, pending, outputs, v.getSubtaskIndex()));
             }
         }
 
-        // open 所有算子（按正序）
-        for (int i = 0; i < n; i++) {
-            @SuppressWarnings({"rawtypes", "unchecked"})
-            Operator op = operators.get(i);
-            op.open(outputs[i]);
+        // 3. 启动所有线程
+        List<Thread> threads = new ArrayList<>();
+        AtomicReference<Throwable> error = new AtomicReference<>();
+        for (Task t : tasks) {
+            Thread th = new Thread(t, "miniflink-task-" + threads.size());
+            th.setUncaughtExceptionHandler((tr, e) -> error.compareAndSet(null, e));
+            threads.add(th);
+            th.start();
         }
 
-        // source 的输出连到第一个算子（链为空时丢弃）
-        @SuppressWarnings("rawtypes")
-        Collector sourceOut = (n == 0) ? new NoopCollector<>() : new OperatorOutput(operators.get(0));
-        @SuppressWarnings("unchecked")
-        Collector<Object> typedSourceOut = (Collector<Object>) sourceOut;
-        source.open(typedSourceOut, 0, 1);
-
-        try {
-            source.run();
-        } finally {
-            // 关闭：source、所有算子、所有输出
-            source.close();
-            for (Operator<?, ?> op : operators) {
-                op.close();
-            }
-            for (int i = 0; i < n; i++) {
-                outputs[i].close();
-            }
-            typedSourceOut.close();
+        // 4. join 等待全部
+        for (Thread th : threads) {
+            th.join();
         }
+
+        // 5. 异常传播
+        if (error.get() != null) {
+            throw new RuntimeException("作业执行失败", error.get());
+        }
+    }
+
+    private List<Output> buildOutputs(ExecutionVertex v, List<ExecutionEdge> edges,
+                                      Map<ExecutionVertex, Channel> inputChannelOf) {
+        List<Output> outputs = new ArrayList<>();
+        for (ExecutionEdge edge : edges) {
+            if (edge.getSources().contains(v)) {
+                List<Channel> targetChannels = new ArrayList<>();
+                for (ExecutionVertex t : edge.getTargets()) {
+                    targetChannels.add(inputChannelOf.get(t));
+                }
+                outputs.add(new Output(targetChannels, edge.getPartitioner(), edge.getKeySelector()));
+            }
+        }
+        return outputs;
+    }
+
+    private int countUpstreams(ExecutionVertex v, List<ExecutionEdge> edges) {
+        int pending = 0;
+        for (ExecutionEdge edge : edges) {
+            if (edge.getTargets().contains(v)) {
+                if (edge.getPartitioner() instanceof ForwardPartitioner) {
+                    pending += 1; // forward 一对一：下游.i 只有一个上游
+                } else {
+                    pending += edge.getSources().size(); // fan-in：所有上游都会发
+                }
+            }
+        }
+        return pending;
     }
 }
