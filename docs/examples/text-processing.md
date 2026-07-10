@@ -9,7 +9,7 @@ StreamExecutionEnvironment env = new StreamExecutionEnvironment();
 CollectSink<String> sink = new CollectSink<>();
 
 env.fromCollection(List.of("hello world", "hi there", "go"))
-   .flatMap((line, out) -> { for (String w : line.split(" ")) out.collect(w); })  // 分词
+   .<String>flatMap((line, out) -> { for (String w : line.split(" ")) out.collect(w); })  // 分词
    .filter(w -> w.length() > 2)                                                    // 过滤短词
    .map(String::toUpperCase)                                                       // 转大写
    .addSink(sink::add);                                                            // 收集结果
