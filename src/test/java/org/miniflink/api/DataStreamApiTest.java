@@ -3,7 +3,6 @@ package org.miniflink.api;
 import org.junit.jupiter.api.Test;
 import org.miniflink.graph.OneInputTransformation;
 import org.miniflink.graph.SourceTransformation;
-import org.miniflink.graph.Transformation;
 
 import java.util.List;
 
