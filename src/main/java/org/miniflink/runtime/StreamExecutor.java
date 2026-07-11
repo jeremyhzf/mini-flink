@@ -6,23 +6,42 @@ import org.miniflink.execution.ExecutionVertex;
 import org.miniflink.execution.ForwardPartitioner;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * 多线程执行器：为每个 ExecutionVertex 建 Task，Task 间用 Channel 连接，启动线程并 join 等待。
- * 任一 Task 未捕获异常 → 记录并在 join 后抛出。
+ * 多线程执行器：为每条边按分区器建 per-(上游,下游) Channel（支持 barrier 对齐的 InputGate），
+ * 为每个 vertex 建 Task，启动线程并 join。任一 Task 未捕获异常 → 记录并在 join 后抛出。
  */
 public class StreamExecutor {
 
     public void execute(ExecutionGraph graph) throws Exception {
-        // 1. 为每个 target vertex 建输入 Channel（fan-in 汇聚）
-        Map<ExecutionVertex, Channel> inputChannelOf = new HashMap<>();
+        // 1. per-pair channel：forward 同索引对；fan-out 全连接对。target 收集其各上游 InputChannel。
+        Map<String, Channel> pairChannels = new HashMap<>();
+        Map<ExecutionVertex, List<InputChannel>> incomingOf = new HashMap<>();
         for (ExecutionEdge edge : graph.getEdges()) {
-            for (ExecutionVertex t : edge.getTargets()) {
-                inputChannelOf.computeIfAbsent(t, k -> new Channel());
+            List<ExecutionVertex> srcs = edge.getSources();
+            List<ExecutionVertex> tgts = edge.getTargets();
+            boolean forward = edge.getPartitioner() instanceof ForwardPartitioner;
+            if (forward) {
+                for (int i = 0; i < srcs.size(); i++) {
+                    ExecutionVertex s = srcs.get(i);
+                    ExecutionVertex t = tgts.get(i);
+                    Channel ch = new Channel();
+                    pairChannels.put(pairKey(s, t), ch);
+                    incomingOf.computeIfAbsent(t, k -> new ArrayList<>()).add(new InputChannel(ch));
+                }
+            } else {
+                for (ExecutionVertex s : srcs) {
+                    for (ExecutionVertex t : tgts) {
+                        Channel ch = new Channel();
+                        pairChannels.put(pairKey(s, t), ch);
+                        incomingOf.computeIfAbsent(t, k -> new ArrayList<>()).add(new InputChannel(ch));
+                    }
+                }
             }
         }
 
@@ -31,13 +50,13 @@ public class StreamExecutor {
         for (ExecutionVertex v : graph.getVertices()) {
             RuntimeContext ctx = new RuntimeContextImpl(
                     v.getSubtaskIndex(), v.getParallelism(), findInputKeySelector(v, graph.getEdges()));
-            List<Output> outputs = buildOutputs(v, graph.getEdges(), inputChannelOf);
+            List<Output> outputs = buildOutputs(v, graph.getEdges(), pairChannels);
             if (v.isSource()) {
                 tasks.add(new SourceTask(v.getSourceOperator(), outputs, ctx));
             } else {
-                Channel input = inputChannelOf.get(v);
-                int pending = countUpstreams(v, graph.getEdges());
-                tasks.add(new OperatorTask(new OperatorChain<>(v.getOperators()), input, pending, outputs, ctx));
+                List<InputChannel> inputs = incomingOf.getOrDefault(v, List.of());
+                int pending = inputs.size();    // 每个上游 InputChannel 最终发 1 个 EOB
+                tasks.add(new OperatorTask(new OperatorChain<>(v.getOperators()), inputs, pending, outputs, ctx));
             }
         }
 
@@ -63,32 +82,27 @@ public class StreamExecutor {
     }
 
     private List<Output> buildOutputs(ExecutionVertex v, List<ExecutionEdge> edges,
-                                      Map<ExecutionVertex, Channel> inputChannelOf) {
+                                      Map<String, Channel> pairChannels) {
         List<Output> outputs = new ArrayList<>();
         for (ExecutionEdge edge : edges) {
-            if (edge.getSources().contains(v)) {
-                List<Channel> targetChannels = new ArrayList<>();
-                for (ExecutionVertex t : edge.getTargets()) {
-                    targetChannels.add(inputChannelOf.get(t));
-                }
-                outputs.add(new Output(targetChannels, edge.getPartitioner(), edge.getKeySelector()));
+            if (!edge.getSources().contains(v)) {
+                continue;
             }
+            List<ExecutionVertex> tgts = edge.getTargets();
+            boolean forward = edge.getPartitioner() instanceof ForwardPartitioner;
+            Channel[] chans = new Channel[tgts.size()];
+            for (int k = 0; k < tgts.size(); k++) {
+                ExecutionVertex t = tgts.get(k);
+                boolean connected = forward ? (k == v.getSubtaskIndex()) : true;
+                chans[k] = connected ? pairChannels.get(pairKey(v, t)) : null;
+            }
+            outputs.add(new Output(Arrays.asList(chans), edge.getPartitioner(), edge.getKeySelector()));
         }
         return outputs;
     }
 
-    private int countUpstreams(ExecutionVertex v, List<ExecutionEdge> edges) {
-        int pending = 0;
-        for (ExecutionEdge edge : edges) {
-            if (edge.getTargets().contains(v)) {
-                if (edge.getPartitioner() instanceof ForwardPartitioner) {
-                    pending += 1; // forward 一对一：下游.i 只有一个上游
-                } else {
-                    pending += edge.getSources().size(); // fan-in：所有上游都会发
-                }
-            }
-        }
-        return pending;
+    private static String pairKey(ExecutionVertex s, ExecutionVertex t) {
+        return s.getId() + "->" + t.getId();
     }
 
     /** 取 vertex 入边的 keySelector（keyed 算子非 null；单线性链每 vertex 最多一条入边）。 */

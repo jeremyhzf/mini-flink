@@ -2,21 +2,31 @@ package org.miniflink.runtime;
 
 import java.util.List;
 
-/** 处理算子执行单元：open chain → 循环读 Channel → Record 经 chain 处理 → EOB 计数；归零广播 EOB。 */
+/** 处理算子执行单元：open chain → 循环读 InputGate → Record 经 chain 处理 → EOB 计数；归零广播 EOB。 */
 public class OperatorTask implements Task {
     private final OperatorChain<?, ?> chain;
-    private final Channel input;
+    private final InputGate input;
     private final int pendingUpstreams;
     private final List<Output> outputs;
     private final RuntimeContext ctx;
 
-    public OperatorTask(OperatorChain<?, ?> chain, Channel input, int pendingUpstreams,
+    public OperatorTask(OperatorChain<?, ?> chain, List<InputChannel> inputChannels, int pendingUpstreams,
                         List<Output> outputs, RuntimeContext ctx) {
         this.chain = chain;
-        this.input = input;
         this.pendingUpstreams = pendingUpstreams;
         this.outputs = outputs;
         this.ctx = ctx;
+        this.input = new InputGate(inputChannels, this::onAligned, this::forwardBarrier);
+    }
+
+    /** InputGate 全部上游对齐时回调：Phase 1 占位（Phase 2 Task 9 接真快照 + ack coordinator）。 */
+    void onAligned(long checkpointId) throws Exception {
+        // 占位：Phase 1 不做快照
+    }
+
+    /** 对齐后向所有下游广播 barrier。 */
+    private void forwardBarrier(Barrier barrier) {
+        broadcastBarrier(outputs, barrier);
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -33,7 +43,7 @@ public class OperatorTask implements Task {
             OperatorChain rawChain = chain;
             int remaining = pendingUpstreams;
             while (remaining > 0) {
-                StreamElement e = input.receive();
+                StreamElement e = input.receive();          // InputGate 内部消费 Barrier
                 if (e == EndOfBroadcast.INSTANCE) {
                     remaining--;
                 } else if (e instanceof Record<?> r) {

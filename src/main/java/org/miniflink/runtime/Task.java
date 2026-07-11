@@ -17,4 +17,11 @@ public interface Task extends Runnable {
             o.sendWatermark(wm);
         }
     }
+
+    /** 向所有出边广播 barrier（对齐后转发用）。 */
+    default void broadcastBarrier(List<Output> outputs, Barrier barrier) {
+        for (Output o : outputs) {
+            o.sendBarrier(barrier);
+        }
+    }
 }
