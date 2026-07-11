@@ -38,7 +38,10 @@ public class SourceContextImpl<T> implements SourceContext<T> {
             if (requestedBarrierId >= 0 && checkpointEmitter != null) {
                 long id = requestedBarrierId;
                 requestedBarrierId = -1;
-                checkpointEmitter.emit(id, emitted);   // offset=emitted（已发数，不含本条），barrier 在本 record 前
+                // skip 期（emitted<skipUntil）报 skipUntil（绝对坐标）与下游 reduce.acc 同坐标系，
+                // 避免恢复 skip 窗口二次故障导致 records 0..skipUntil-1 双重累加；
+                // 冷启（skipUntil=0）/正常后（emitted>=skipUntil）max 取 emitted，行为不变。
+                checkpointEmitter.emit(id, Math.max(emitted, skipUntil));
             }
         } catch (Exception e) {
             throw new RuntimeException("source checkpoint 处理异常", e);
@@ -57,7 +60,7 @@ public class SourceContextImpl<T> implements SourceContext<T> {
             if (requestedBarrierId >= 0 && checkpointEmitter != null) {
                 long id = requestedBarrierId;
                 requestedBarrierId = -1;
-                checkpointEmitter.emit(id, emitted);
+                checkpointEmitter.emit(id, Math.max(emitted, skipUntil));   // 同 collect：skip 期报绝对 offset
             }
         } catch (Exception e) {
             throw new RuntimeException("source checkpoint drain 异常", e);

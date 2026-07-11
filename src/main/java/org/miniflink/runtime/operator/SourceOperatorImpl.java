@@ -10,7 +10,7 @@ import org.miniflink.runtime.SourceOperator;
 /** 包装 SourceFunction 的 source 算子：open 建 SourceContextImpl（带并行位置），run 调用用户函数。 */
 public class SourceOperatorImpl<OUT> implements SourceOperator<OUT> {
     private final SourceFunction<OUT> sourceFunction;
-    private SourceContext<OUT> ctx;
+    private volatile SourceContext<OUT> ctx;   // daemon 协调器线程读 / source task 线程写 → volatile 保可见性
 
     public SourceOperatorImpl(SourceFunction<OUT> sourceFunction) {
         this.sourceFunction = sourceFunction;

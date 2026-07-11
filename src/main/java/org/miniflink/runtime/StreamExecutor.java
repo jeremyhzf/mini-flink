@@ -38,6 +38,7 @@ public class StreamExecutor {
     public void execute(ExecutionGraph graph, long checkpointInterval, int maxRestarts) throws Exception {
         List<String> snapshotKeys = collectSnapshotKeys(graph);   // 每个 subtask 一个 key（vertex.id）
         Checkpoint lastCp = null;
+        Throwable lastFailure = null;   // 末轮失败 cause（达 maxRestarts 时随异常抛出，避免丢失）
         for (int attempt = 0; attempt <= maxRestarts; attempt++) {
             // 1. coordinator 先建（持有可变 source 列表引用），buildTasks 往里填 source task
             List<SourceTask> sourceTasks = new ArrayList<>();
@@ -51,6 +52,7 @@ public class StreamExecutor {
             if (failure == null) {
                 return;   // 正常结束
             }
+            lastFailure = failure;   // 记录末轮失败 cause（达 maxRestarts 时随异常抛出）
             // 4. 失败路径：取最近完成的 checkpoint
             lastCp = coordinator.lastCompletedCheckpoint();
             if (lastCp == null) {
@@ -59,7 +61,7 @@ public class StreamExecutor {
             }
             // 否则下一轮从 lastCp 恢复重建重跑
         }
-        throw new RuntimeException("作业执行失败（已达 maxRestarts=" + maxRestarts + "）");
+        throw new RuntimeException("作业执行失败（已达 maxRestarts=" + maxRestarts + "）", lastFailure);
     }
 
     /** 收集全部 subtask 的 snapshotKey（每个 vertex 的 id）。 */
