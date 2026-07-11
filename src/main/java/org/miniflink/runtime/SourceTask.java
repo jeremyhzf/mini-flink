@@ -17,7 +17,7 @@ public class SourceTask implements Task {
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
     public void run() {
-        OutputCollector out = new OutputCollector(outputs, ctx.getSubtaskIndex());
+        OutputCollector out = new OutputCollector(outputs, ctx);
         try {
             sourceOperator.open((Collector) out, ctx);
             sourceOperator.run();

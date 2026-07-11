@@ -26,10 +26,10 @@ public class Output {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public void route(Object value, int upstreamIndex) throws Exception {
+    public void route(Object value, long timestamp, int upstreamIndex) throws Exception {
         Object key = (keySelector != null) ? ((KeySelector) keySelector).getKey(value) : null;
         int idx = partitioner.selectChannel(downstreamChannels.size(), key, upstreamIndex);
-        downstreamChannels.get(idx).send(new Record<>(value));
+        downstreamChannels.get(idx).send(new Record<>(value, timestamp));
     }
 
     /**

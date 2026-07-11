@@ -22,7 +22,7 @@ public class OperatorTask implements Task {
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
     public void run() {
-        Collector outCollector = outputs.isEmpty() ? new NoopCollector<>() : new OutputCollector(outputs, ctx.getSubtaskIndex());
+        Collector outCollector = outputs.isEmpty() ? new NoopCollector<>() : new OutputCollector(outputs, ctx);
         try {
             chain.open((Collector) outCollector, ctx);
             @SuppressWarnings("rawtypes")
@@ -33,6 +33,7 @@ public class OperatorTask implements Task {
                 if (e == EndOfBroadcast.INSTANCE) {
                     remaining--;
                 } else if (e instanceof Record<?> r) {
+                    ctx.setCurrentTimestamp(r.timestamp());   // 入链：设当前 ts
                     rawChain.processElement(r.value());
                 }
             }

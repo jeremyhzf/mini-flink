@@ -14,8 +14,8 @@ class OperatorTaskTest {
     @Test
     void 处理数据并在所有上游EOB后向下游广播() throws Exception {
         Channel input = new Channel(8);
-        input.send(new Record<>(1));
-        input.send(new Record<>(2));
+        input.send(new Record<>(1, 0L));
+        input.send(new Record<>(2, 0L));
         input.send(EndOfBroadcast.INSTANCE);
 
         OperatorChain<Integer, Integer> chain = new OperatorChain<>(List.of(
@@ -33,9 +33,9 @@ class OperatorTaskTest {
     @Test
     void 多上游时等所有EOB才退出不丢数据() throws Exception {
         Channel input = new Channel(8);
-        input.send(new Record<>(1));
+        input.send(new Record<>(1, 0L));
         input.send(EndOfBroadcast.INSTANCE);   // 上游 1 的 EOB
-        input.send(new Record<>(2));
+        input.send(new Record<>(2, 0L));
         input.send(EndOfBroadcast.INSTANCE);   // 上游 2 的 EOB
 
         OperatorChain<Integer, Integer> chain = new OperatorChain<>(List.of(

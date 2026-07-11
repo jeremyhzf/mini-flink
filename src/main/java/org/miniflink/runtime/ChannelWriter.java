@@ -14,7 +14,7 @@ public class ChannelWriter<T> implements Collector<T> {
     @Override
     public void collect(T record) {
         try {
-            channel.send(new Record<>(record));
+            channel.send(new Record<>(record, Long.MIN_VALUE));
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException("通道发送被中断", e);

@@ -7,7 +7,7 @@ class StreamElementTest {
 
     @Test
     void record携带value且实现StreamElement() {
-        Record<String> r = new Record<>("hello");
+        Record<String> r = new Record<>("hello", 0L);
         assertInstanceOf(StreamElement.class, r);
         assertEquals("hello", r.value());
     }

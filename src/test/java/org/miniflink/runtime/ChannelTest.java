@@ -9,8 +9,8 @@ class ChannelTest {
     @Test
     void send与receive应FIFO传递元素() throws Exception {
         Channel ch = new Channel(4);
-        ch.send(new Record<>("a"));
-        ch.send(new Record<>("b"));
+        ch.send(new Record<>("a", 0L));
+        ch.send(new Record<>("b", 0L));
         ch.send(EndOfBroadcast.INSTANCE);
 
         assertInstanceOf(Record.class, ch.receive());                  // 第一个 = a
@@ -21,10 +21,10 @@ class ChannelTest {
     @Test
     void 容量满时send应阻塞() throws Exception {
         Channel ch = new Channel(1); // 容量 1
-        ch.send(new Record<>("x")); // 占满
+        ch.send(new Record<>("x", 0L)); // 占满
         // 再 send 应阻塞；用另一个线程验证
         Thread blocker = new Thread(() -> {
-            try { ch.send(new Record<>("y")); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+            try { ch.send(new Record<>("y", 0L)); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
         });
         blocker.start();
         Thread.sleep(100);

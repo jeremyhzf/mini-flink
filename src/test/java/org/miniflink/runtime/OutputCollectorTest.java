@@ -16,7 +16,7 @@ class OutputCollectorTest {
         Channel c0 = new Channel(2);
         Channel c1 = new Channel(2);
         Output out = new Output(List.of(c0, c1), new ForwardPartitioner(), null);
-        OutputCollector<String> col = new OutputCollector<>(List.of(out), 0); // upstreamIndex=0 → c0
+        OutputCollector<String> col = new OutputCollector<>(List.of(out), new RuntimeContextImpl(0, 1, null)); // upstreamIndex=0 → c0
 
         col.collect("x");
 
@@ -29,7 +29,7 @@ class OutputCollectorTest {
         Channel c1 = new Channel(4);
         Output out = new Output(List.of(c0, c1), new HashPartitioner(),
                 (org.miniflink.api.function.KeySelector<String, String>) s -> s);
-        OutputCollector<String> col = new OutputCollector<>(List.of(out), 0);
+        OutputCollector<String> col = new OutputCollector<>(List.of(out), new RuntimeContextImpl(0, 1, null));
 
         col.collect("b");
         col.collect("b");
