@@ -31,6 +31,11 @@ public class Channel {
         return queue.take();
     }
 
+    /** 非阻塞接收：队列空返回 null（InputGate 轮询用）。 */
+    public StreamElement poll() {
+        return queue.poll();
+    }
+
     /** 队列是否为空（仅供测试/观测用）。 */
     public boolean isEmpty() {
         return queue.isEmpty();
