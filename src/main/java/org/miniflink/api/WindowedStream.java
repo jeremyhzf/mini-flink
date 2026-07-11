@@ -1,7 +1,6 @@
 package org.miniflink.api;
 
 import org.miniflink.api.function.ReduceFunction;
-import org.miniflink.execution.HashPartitioner;
 import org.miniflink.runtime.operator.WindowOperator;
 import org.miniflink.window.Window;
 import org.miniflink.window.WindowAssigner;

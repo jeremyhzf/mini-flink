@@ -9,7 +9,10 @@ import org.miniflink.runtime.RuntimeContext;
 import org.miniflink.runtime.Watermark;
 import org.miniflink.time.InternalTimerService;
 import org.miniflink.time.TimerHandler;
+import org.miniflink.window.EventTimeTrigger;
 import org.miniflink.window.TimeWindow;
+import org.miniflink.window.TriggerContext;
+import org.miniflink.window.TriggerResult;
 import org.miniflink.window.WindowAssigner;
 
 import java.util.ArrayList;
@@ -20,6 +23,7 @@ import java.util.Map;
 /**
  * 窗口聚合算子：per-key per-window MapState 增量 reduce；watermark 推进触发 window-end 输出最终值 + 清理。
  * 活跃窗口注册表：end -> [(key, window)]，按 end 直达待触发窗口，避免遍历所有 key。
+ * 阶段④仅支持 parallelism=1 的 watermark 语义；多上游 watermark 的 min 对齐留阶段⑤（spec §5）。
  */
 public class WindowOperator<IN> implements Operator<IN, IN>, TimerHandler {
 
@@ -28,11 +32,15 @@ public class WindowOperator<IN> implements Operator<IN, IN>, TimerHandler {
 
     private final WindowAssigner<IN, TimeWindow> windowAssigner;
     private final ReduceFunction<IN> reduceFn;
+    /** 事件时间触发器：决定窗口何时触发（Task 6 抽象，替代内联触发逻辑）。 */
+    private final EventTimeTrigger<IN, TimeWindow> trigger = EventTimeTrigger.create();
     private Collector<IN> out;
     private RuntimeContext ctx;
     private MapState<TimeWindow, IN> state;           // per-key per-window 累加器，按 currentKey 寻址
     private KeySelector<IN, ?> keySelector;
     private final InternalTimerService timerService = new InternalTimerService();
+    /** Trigger 上下文：委托 timerService 提供当前 watermark + 定时器注册。 */
+    private final TriggerContext triggerCtx = new TriggerContextImpl();
     /** end -> 该 end 下所有 (key, window)（watermark 到 end 时全部触发）。 */
     private final Map<Long, List<KeyedWindow>> activeWindows = new HashMap<>();
 
@@ -57,15 +65,18 @@ public class WindowOperator<IN> implements Operator<IN, IN>, TimerHandler {
         Object key = keySelector.getKey(record);
         ctx.setCurrentKey(key);
         for (TimeWindow window : windowAssigner.assignWindows(record, ts)) {
+            if (window.end() <= timerService.currentWatermark()) {
+                continue;   // 迟到数据丢弃（spec §8）；currentWatermark 初始 Long.MIN_VALUE，首条不误判
+            }
             IN acc = state.get(window);
             IN reduced = (acc == null) ? record : reduceFn.reduce(acc, record);
             state.put(window, reduced);
 
-            // 注册窗口：若该 (key, window) 首次出现，加入注册表 + 注册 end timer
+            // 注册窗口：若该 (key, window) 首次出现，加入注册表 + 经 Trigger 注册 end timer
             if (!isRegistered(key, window)) {
                 activeWindows.computeIfAbsent(window.end(), k -> new ArrayList<>())
                         .add(new KeyedWindow(key, window));
-                timerService.registerEventTimeTimer(window.end());   // 等价 EventTimeTrigger：注册 window.end
+                trigger.onElement(record, ts, window, triggerCtx);   // EventTimeTrigger.onElement 注册 window.end timer
             }
         }
     }
@@ -85,11 +96,15 @@ public class WindowOperator<IN> implements Operator<IN, IN>, TimerHandler {
         }
         for (KeyedWindow kw : toFire) {
             ctx.setCurrentKey(kw.key());
-            IN acc = state.get(kw.window());
-            if (acc != null) {
-                out.collect(acc);       // 输出窗口最终值
+            // 经 Trigger 决定是否触发：EventTimeTrigger.onEventTime(end) 返回 FIRE_AND_PURGE
+            TriggerResult r = trigger.onEventTime(time, kw.window(), triggerCtx);
+            if (r == TriggerResult.FIRE_AND_PURGE) {
+                IN acc = state.get(kw.window());
+                if (acc != null) {
+                    out.collect(acc);       // 输出窗口最终值
+                }
+                state.put(kw.window(), null);  // 清理（MapState 无 remove，用 put null）
             }
-            state.put(kw.window(), null);  // 清理（MapState 无 remove，用 put null）
         }
     }
 
@@ -104,6 +119,24 @@ public class WindowOperator<IN> implements Operator<IN, IN>, TimerHandler {
             }
         }
         return false;
+    }
+
+    /** Trigger 上下文实现：委托 timerService 提供 watermark 与定时器注册（Task 6 抽象接入点）。 */
+    private class TriggerContextImpl implements TriggerContext {
+        @Override
+        public long getCurrentWatermark() {
+            return timerService.currentWatermark();
+        }
+
+        @Override
+        public void registerEventTimeTimer(long time) {
+            timerService.registerEventTimeTimer(time);
+        }
+
+        @Override
+        public void deleteEventTimeTimer(long time) {
+            timerService.deleteEventTimeTimer(time);
+        }
     }
 
     @Override

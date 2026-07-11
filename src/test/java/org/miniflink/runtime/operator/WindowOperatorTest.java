@@ -84,4 +84,27 @@ class WindowOperatorTest {
         assertEquals(2, out.getResult().size());
         assertTrue(out.getResult().contains(new TE(9, 1500)));
     }
+
+    @Test
+    void 迟到数据被丢弃不重复触发() throws Exception {
+        // spec §8：window.end <= currentWatermark 的迟到记录丢弃，不重复触发已清理窗口
+        WindowOperator<TE> op = new WindowOperator<>(
+                TumblingEventTimeWindows.<TE>of(java.time.Duration.ofSeconds(1)),
+                (ReduceFunction<TE>) (a, b) -> new TE(a.value + b.value, b.ts));
+        RuntimeContextImpl ctx = new RuntimeContextImpl(0, 1, (TE t) -> t.value);
+        ListCollector<TE> out = new ListCollector<>();
+        op.open(out, ctx);
+
+        ctx.setCurrentTimestamp(1500);
+        op.processElement(new TE(5, 1500));   // key=5, 窗口[1000,2000), acc=5
+        op.onWatermark(new Watermark(2000));  // watermark 到 end → 触发，输出 (5,1500)
+        assertEquals(1, out.getResult().size());
+
+        // 迟到记录：window.end=2000 <= 当前 watermark 2000 → 丢弃，不重新累加/注册
+        ctx.setCurrentTimestamp(1800);
+        op.processElement(new TE(5, 1800));   // key=5, 同窗口[1000,2000)，迟到
+        op.onWatermark(new Watermark(3000));  // 再推 watermark，无重复触发
+        assertEquals(1, out.getResult().size(), "迟到记录应被丢弃，窗口不重复触发");
+        assertEquals(new TE(5, 1500), out.getResult().get(0));
+    }
 }
