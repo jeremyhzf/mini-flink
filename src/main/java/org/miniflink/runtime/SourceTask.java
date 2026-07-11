@@ -11,18 +11,25 @@ public class SourceTask implements Task {
     private final RuntimeContext ctx;
     private final CheckpointCoordinator coordinator;   // Phase 1 为 null（占位）；Task 10 注入后 requestCheckpoint 生效
     private final String snapshotKey;                   // checkpoint 用
+    private final long restoreOffset;                   // 恢复时跳过前 N 条（-1=冷启）
 
     public SourceTask(SourceOperator<?> sourceOperator, List<Output> outputs, RuntimeContext ctx) {
-        this(sourceOperator, outputs, ctx, null, null);
+        this(sourceOperator, outputs, ctx, null, null, -1L);
     }
 
     public SourceTask(SourceOperator<?> sourceOperator, List<Output> outputs, RuntimeContext ctx,
                       CheckpointCoordinator coordinator, String snapshotKey) {
+        this(sourceOperator, outputs, ctx, coordinator, snapshotKey, -1L);
+    }
+
+    public SourceTask(SourceOperator<?> sourceOperator, List<Output> outputs, RuntimeContext ctx,
+                      CheckpointCoordinator coordinator, String snapshotKey, long restoreOffset) {
         this.sourceOperator = sourceOperator;
         this.outputs = outputs;
         this.ctx = ctx;
         this.coordinator = coordinator;
         this.snapshotKey = snapshotKey;
+        this.restoreOffset = restoreOffset;
     }
 
     /** coordinator 请求 source 发 barrier（仅置标志；处理在源线程 collect）。 */
@@ -53,6 +60,11 @@ public class SourceTask implements Task {
         OutputCollector out = new OutputCollector(outputs, ctx);
         try {
             sourceOperator.open((Collector) out, ctx);
+            // 恢复：open 先建 SourceContextImpl，restoreOffset 设 skipUntil；之后 run 重放时跳过前 offset 条。
+            // 顺序：open（建 ctx）→ restoreOffset（设 skipUntil）→ configureCheckpointEmitter → run。
+            if (restoreOffset >= 0) {
+                sourceOperator.restoreOffset(restoreOffset);
+            }
             configureCheckpointEmitter(out);
             sourceOperator.run();
             // 末尾 drain：若最后一轮 checkpoint 请求在最后一条之后到达，补一次（offset=已全部 emitted）

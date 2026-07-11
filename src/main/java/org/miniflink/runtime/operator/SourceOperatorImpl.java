@@ -47,7 +47,13 @@ public class SourceOperatorImpl<OUT> implements SourceOperator<OUT> {
     }
 
     @Override
-    public void requestCheckpoint(long checkpointId) { ctx.requestCheckpoint(checkpointId); }
+    public void requestCheckpoint(long checkpointId) {
+        // coordinator daemon 可能在 source.open() 之前就触发（线程启动竞态）；此时 ctx 尚未建立，
+        // 忽略本轮（下一个周期 source 就绪后会被处理），避免 NPE 杀死协调器线程导致永无 checkpoint。
+        if (ctx != null) {
+            ctx.requestCheckpoint(checkpointId);
+        }
+    }
 
     @Override
     public void setCheckpointEmitter(SourceContextImpl.CheckpointEmitter emitter) {

@@ -12,21 +12,30 @@ public class OperatorTask implements Task {
     private final RuntimeContext ctx;
     private final CheckpointCoordinator coordinator;   // Phase 1 为 null（占位）
     private final String snapshotKey;                   // checkpoint 用
+    private final SubtaskSnapshot restoreSnapshot;      // 恢复用快照（null=冷启）
 
     public OperatorTask(OperatorChain<?, ?> chain, List<InputChannel> inputChannels, int pendingUpstreams,
                         List<Output> outputs, RuntimeContext ctx) {
-        this(chain, inputChannels, pendingUpstreams, outputs, ctx, null, null);
+        this(chain, inputChannels, pendingUpstreams, outputs, ctx, null, null, null);
     }
 
     public OperatorTask(OperatorChain<?, ?> chain, List<InputChannel> inputChannels, int pendingUpstreams,
                         List<Output> outputs, RuntimeContext ctx,
                         CheckpointCoordinator coordinator, String snapshotKey) {
+        this(chain, inputChannels, pendingUpstreams, outputs, ctx, coordinator, snapshotKey, null);
+    }
+
+    public OperatorTask(OperatorChain<?, ?> chain, List<InputChannel> inputChannels, int pendingUpstreams,
+                        List<Output> outputs, RuntimeContext ctx,
+                        CheckpointCoordinator coordinator, String snapshotKey,
+                        SubtaskSnapshot restoreSnapshot) {
         this.chain = chain;
         this.pendingUpstreams = pendingUpstreams;
         this.outputs = outputs;
         this.ctx = ctx;
         this.coordinator = coordinator;
         this.snapshotKey = snapshotKey;
+        this.restoreSnapshot = restoreSnapshot;
         this.input = new InputGate(inputChannels, this::onAligned, this::forwardBarrier);
     }
 
@@ -56,6 +65,12 @@ public class OperatorTask implements Task {
                 impl.setWatermarkEmitter(wm -> broadcastWatermark(outputs, wm));
             }
             chain.open((Collector) outCollector, ctx);
+            // 恢复：open 先建 state 句柄（如 ReduceOperator 的 ValueState），restore 再填充 keyed/算子状态。
+            // 顺序不可反：open 在新 RuntimeContext 的空 backend 上建句柄，restore 用 checkpoint 数据覆盖 backend 存储。
+            if (restoreSnapshot != null) {
+                ctx.getStateBackend().restore(restoreSnapshot.getKeyedState());
+                chain.restoreState(restoreSnapshot.getOperatorStates());
+            }
             @SuppressWarnings("rawtypes")
             OperatorChain rawChain = chain;
             int remaining = pendingUpstreams;
