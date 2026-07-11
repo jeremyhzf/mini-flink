@@ -7,11 +7,20 @@ public class SourceTask implements Task {
     private final SourceOperator<?> sourceOperator;
     private final List<Output> outputs;
     private final RuntimeContext ctx;
+    private final CheckpointCoordinator coordinator;   // Phase 1 为 null（占位）；Task 10 注入后 triggerCheckpoint 生效
+    private final String snapshotKey;                   // checkpoint 用
 
     public SourceTask(SourceOperator<?> sourceOperator, List<Output> outputs, RuntimeContext ctx) {
+        this(sourceOperator, outputs, ctx, null, null);
+    }
+
+    public SourceTask(SourceOperator<?> sourceOperator, List<Output> outputs, RuntimeContext ctx,
+                      CheckpointCoordinator coordinator, String snapshotKey) {
         this.sourceOperator = sourceOperator;
         this.outputs = outputs;
         this.ctx = ctx;
+        this.coordinator = coordinator;
+        this.snapshotKey = snapshotKey;
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
