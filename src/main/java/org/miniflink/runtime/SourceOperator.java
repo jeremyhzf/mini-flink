@@ -12,4 +12,10 @@ public interface SourceOperator<OUT> {
      * （如 SourceContext）若被多 subtask 共享会相互踩踏导致丢数据/重复。
      */
     SourceOperator<OUT> copy();
+
+    /** 当前 source 已转发条数（透传 SourceContext.snapshotOffset，checkpoint 快照用）。 */
+    long snapshotOffset();
+
+    /** 恢复时跳过前 offset 条已发记录（透传 SourceContext.restoreOffset，exactly-once 重放）。 */
+    void restoreOffset(long offset);
 }

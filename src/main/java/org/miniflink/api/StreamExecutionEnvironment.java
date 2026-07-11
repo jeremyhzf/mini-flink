@@ -20,8 +20,10 @@ public class StreamExecutionEnvironment {
     }
 
     public <T> DataStream<T> fromCollection(Iterable<T> data) {
+        java.util.List<T> list = new java.util.ArrayList<>();
+        data.forEach(list::add);   // 转可重复遍历的 List（支持 checkpoint 重放）
         SourceTransformation<T> source = new SourceTransformation<>(
-                getNewNodeId(), "source", new SourceOperatorImpl<>(new CollectionSource<>(data)));
+                getNewNodeId(), "source", new SourceOperatorImpl<>(new CollectionSource<>(list)));
         streamGraph.addTransformation(source);
         return new DataStream<>(this, source);
     }

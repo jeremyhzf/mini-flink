@@ -35,4 +35,14 @@ public class SourceOperatorImpl<OUT> implements SourceOperator<OUT> {
     public SourceOperatorImpl<OUT> copy() {
         return new SourceOperatorImpl<>(sourceFunction);
     }
+
+    @Override
+    public long snapshotOffset() {
+        return ctx.snapshotOffset();
+    }
+
+    @Override
+    public void restoreOffset(long offset) {
+        ctx.restoreOffset(offset);
+    }
 }
