@@ -54,12 +54,14 @@ public class InputGate {
         }
     }
 
-    /** 非阻塞探测：全部 channel 与缓冲均空时返回 null（测试/观测用）。 */
+    /** 非阻塞探测：全部 channel 与缓冲均空时返回 null（测试/观测用，仅在対齐完成后调用）。 */
     public StreamElement pollNonBlocking() {
-        // 先放行缓冲
-        for (InputChannel c : channels) {
-            StreamElement b = c.pollBuffered();
-            if (b != null) return b;
+        // 先放行缓冲（仅对齐完成后才放行；対齐进行中缓冲须保留，否则已对齐 channel 的 record 会被错误提前放出）
+        if (aligningId < 0) {
+            for (InputChannel c : channels) {
+                StreamElement b = c.pollBuffered();
+                if (b != null) return b;
+            }
         }
         for (InputChannel c : channels) {
             StreamElement e = c.poll();
@@ -72,11 +74,16 @@ public class InputGate {
 
     /** 阻塞取下一个原始元素；优先放行已缓冲元素（对齐完成后缓冲先于新元素放行）。 */
     private StreamElement nextRaw() throws InterruptedException {
-        for (InputChannel c : channels) {
-            StreamElement b = c.pollBuffered();
-            if (b != null) {
-                lastIdx = channels.indexOf(c);
-                return b;
+        // 仅対齐完成后（aligningId < 0）才排空缓冲：缓冲元素只在全部 channel 对齐后才该放行。
+        // 若対齐进行中（aligningId >= 0）排空缓冲，被缓冲的 record 会被 receive() 见 aligningId>=0 && isAligned
+        // 再次 buffer，形成 nextRaw↔receive 无限循环，且 nextRaw 永不再 poll 未对齐 channel 的 barrier → 硬死锁。
+        if (aligningId < 0) {
+            for (InputChannel c : channels) {
+                StreamElement b = c.pollBuffered();
+                if (b != null) {
+                    lastIdx = channels.indexOf(c);
+                    return b;
+                }
             }
         }
         int n = channels.size();

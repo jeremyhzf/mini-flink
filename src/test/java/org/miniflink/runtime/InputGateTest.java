@@ -1,6 +1,7 @@
 package org.miniflink.runtime;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
@@ -56,5 +57,42 @@ class InputGateTest {
         assertInstanceOf(Record.class, third);
         assertInstanceOf(Record.class, fourth);
         assertEquals(2L, aligned[0]);
+    }
+
+    /**
+     * 真触发缓冲路径且不死锁：a 的 barrier 先到（a 立即对齐），a 的后续 record 须被缓冲；
+     * 在 b 的 barrier 到达前，nextRaw 必须继续 poll b（而非反复排空 a 的缓冲），否则死锁。
+     * 复现 Critical-1：旧实现 nextRaw 无条件排空缓冲 → nextRaw↔receive 死循环 → b 的 barrier 永不消费 → 硬死锁。
+     * 修复后：対齐进行中（aligningId>=0）不排空缓冲，b 的 barrier 正常消费 → 全部对齐 → 缓冲放行。
+     */
+    @Test
+    @Timeout(10)
+    void partialAlignmentBuffersEarlyChannelRecordWithoutDeadlock() throws Exception {
+        long[] aligned = {0};
+        Deque<Barrier> forwarded = new ArrayDeque<>();
+        // a 的 barrier 在前：barrier 后的 a2 须被缓冲；b 的 record（未对齐 channel）正常放行
+        // 各加 EOB 防止对齐后的 take 阻塞
+        InputChannel a = feed(new Barrier(2L), new Record<>("a2", 0), EndOfBroadcast.INSTANCE);
+        InputChannel b = feed(new Record<>("b1", 0), new Barrier(2L), EndOfBroadcast.INSTANCE);
+        InputGate gate = new InputGate(List.of(a, b), id -> aligned[0] = id, forwarded::add);
+
+        // 第 1 次：b1（未对齐 channel 的 record 放行）；a 的 a2 被缓冲
+        Object first = gate.receive();
+        assertInstanceOf(Record.class, first);
+        assertEquals("b1", ((Record<?>) first).value());
+
+        // 第 2 次：a2（全部对齐完成后 aligningId=-1，缓冲经 nextRaw 放行分支放出）
+        Object second = gate.receive();
+        assertInstanceOf(Record.class, second);
+        assertEquals("a2", ((Record<?>) second).value());
+
+        // 对齐已完成：回调触发 + barrier 已转发
+        assertEquals(2L, aligned[0]);
+        assertEquals(2L, forwarded.poll().getCheckpointId());
+
+        // 第 3、4 次：两个 EOB（关键是不死锁：测试在 @Timeout(10) 内正常结束）
+        assertEquals(EndOfBroadcast.INSTANCE, gate.receive());
+        assertEquals(EndOfBroadcast.INSTANCE, gate.receive());
+        assertNull(gate.pollNonBlocking());
     }
 }
