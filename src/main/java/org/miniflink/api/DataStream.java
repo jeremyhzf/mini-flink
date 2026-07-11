@@ -57,6 +57,12 @@ public class DataStream<T> {
         return transform("filter", new FilterOperator<>(filter));
     }
 
+    /** 打事件时间戳并生成 watermark（独立算子）。 */
+    public DataStream<T> assignTimestampsAndWatermarks(org.miniflink.time.WatermarkStrategy<T> strategy) {
+        return transform("timestamps-and-watermarks",
+                new org.miniflink.runtime.operator.TimestampsAndWatermarksOperator<>(strategy));
+    }
+
     public void addSink(SinkFunction<T> sinkFunction) {
         Partitioner part = (nextPartitioner != null) ? nextPartitioner : new ForwardPartitioner();
         OneInputTransformation<T, Void> sink = new OneInputTransformation<>(

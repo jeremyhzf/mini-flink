@@ -12,4 +12,5 @@ public interface RuntimeContext {
     KeySelector<?, ?> getKeySelector();
     long getCurrentTimestamp();          // 当前记录的事件时间戳（OperatorTask 在 processElement 前设置）
     void setCurrentTimestamp(long ts);
+    void emitWatermark(Watermark wm);    // 算子发 watermark 的通道（emitter 由 OperatorTask 注入，广播到本 subtask outputs）
 }

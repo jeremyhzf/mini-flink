@@ -24,6 +24,10 @@ public class OperatorTask implements Task {
     public void run() {
         Collector outCollector = outputs.isEmpty() ? new NoopCollector<>() : new OutputCollector(outputs, ctx);
         try {
+            // 算子通过 ctx.emitWatermark 发 watermark；emitter 广播到本 subtask 的 outputs（保持 watermark 流）
+            if (ctx instanceof RuntimeContextImpl impl) {
+                impl.setWatermarkEmitter(wm -> broadcastWatermark(outputs, wm));
+            }
             chain.open((Collector) outCollector, ctx);
             @SuppressWarnings("rawtypes")
             OperatorChain rawChain = chain;
