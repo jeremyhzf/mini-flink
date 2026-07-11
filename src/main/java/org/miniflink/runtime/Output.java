@@ -70,4 +70,16 @@ public class Output {
             }
         }
     }
+
+    /** 向所有下游 channel 广播 barrier（对齐用，不分区）。 */
+    public void sendBarrier(Barrier barrier) {
+        for (Channel c : downstreamChannels) {
+            try {
+                c.send(barrier);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException("发送 Barrier 被中断", e);
+            }
+        }
+    }
 }
