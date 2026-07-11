@@ -11,4 +11,7 @@ public interface SourceContext<T> {
 
     /** 恢复时跳过前 offset 条已发记录（exactly-once 重放）。 */
     void restoreOffset(long offset);
+
+    /** coordinator 请求 source 发 barrier（仅置标志；处理在源线程 collect）。 */
+    void requestCheckpoint(long checkpointId);
 }

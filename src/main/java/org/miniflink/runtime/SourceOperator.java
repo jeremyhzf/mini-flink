@@ -18,4 +18,10 @@ public interface SourceOperator<OUT> {
 
     /** 恢复时跳过前 offset 条已发记录（透传 SourceContext.restoreOffset，exactly-once 重放）。 */
     void restoreOffset(long offset);
+
+    /** coordinator 请求 source 发 barrier（透传 SourceContext.requestCheckpoint，仅置标志）。 */
+    void requestCheckpoint(long checkpointId);
+
+    /** 配置源线程 checkpoint 钩子（透传 SourceContextImpl.setCheckpointEmitter）。 */
+    void setCheckpointEmitter(SourceContextImpl.CheckpointEmitter emitter);
 }

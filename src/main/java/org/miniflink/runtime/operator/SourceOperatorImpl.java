@@ -45,4 +45,15 @@ public class SourceOperatorImpl<OUT> implements SourceOperator<OUT> {
     public void restoreOffset(long offset) {
         ctx.restoreOffset(offset);
     }
+
+    @Override
+    public void requestCheckpoint(long checkpointId) { ctx.requestCheckpoint(checkpointId); }
+
+    @Override
+    public void setCheckpointEmitter(SourceContextImpl.CheckpointEmitter emitter) {
+        ((SourceContextImpl<OUT>) ctx).setCheckpointEmitter(emitter);
+    }
+
+    /** 暴露内部 ctx（SourceTask 配置 emitter / drainPending 用）。 */
+    public SourceContextImpl<OUT> getSourceContext() { return (SourceContextImpl<OUT>) ctx; }
 }
