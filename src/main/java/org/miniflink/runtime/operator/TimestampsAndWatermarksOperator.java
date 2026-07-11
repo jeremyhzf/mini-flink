@@ -39,6 +39,6 @@ public class TimestampsAndWatermarksOperator<T> implements Operator<T, T> {
 
     @Override
     public TimestampsAndWatermarksOperator<T> copy() {
-        return new TimestampsAndWatermarksOperator<>(strategy);        // 共享无状态 strategy
+        return new TimestampsAndWatermarksOperator<>(strategy.copy()); // per-subtask 独立 strategy（BoundedOutOfOrdernessWatermarks 有状态）
     }
 }

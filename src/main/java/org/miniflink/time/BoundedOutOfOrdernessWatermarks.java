@@ -25,4 +25,13 @@ public class BoundedOutOfOrdernessWatermarks<T> implements WatermarkStrategy<T> 
         // maxTimestamp - maxOutOfOrderness；maxTimestamp 为 MIN 时（无数据）返回 MIN
         return (maxTimestamp == Long.MIN_VALUE) ? Long.MIN_VALUE : maxTimestamp - maxOutOfOrderness;
     }
+
+    /**
+     * 返回新实例（per-subtask 独立 maxTimestamp，消除多并行度竞态）。
+     * assigner 通常无状态可共享，maxOutOfOrderness 是 final 值。
+     */
+    @Override
+    public BoundedOutOfOrdernessWatermarks<T> copy() {
+        return new BoundedOutOfOrdernessWatermarks<>(maxOutOfOrderness, assigner);
+    }
 }

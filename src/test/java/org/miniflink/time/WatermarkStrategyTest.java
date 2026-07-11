@@ -20,4 +20,18 @@ class WatermarkStrategyTest {
         strategy.extractTimestamp("3000");   // maxTs=3000
         assertEquals(2900, strategy.currentWatermark());             // 3000-100
     }
+
+    @Test
+    void BoundedOutOfOrderness的copy返回独立实例状态隔离() {
+        BoundedOutOfOrdernessWatermarks<String> s1 = new BoundedOutOfOrdernessWatermarks<>(100, s -> Long.parseLong(s));
+        s1.extractTimestamp("1000");   // s1.maxTimestamp=1000
+        BoundedOutOfOrdernessWatermarks<String> s2 = s1.copy();
+        assertNotSame(s1, s2);
+        assertEquals(900, s1.currentWatermark());    // s1 仍 900
+        // s2 是新实例，maxTimestamp 重置
+        assertEquals(Long.MIN_VALUE, s2.currentWatermark());   // s2 未消费数据
+        s2.extractTimestamp("500");
+        assertEquals(400, s2.currentWatermark());    // s2 独立：500-100
+        assertEquals(900, s1.currentWatermark());    // s1 不受 s2 影响
+    }
 }
