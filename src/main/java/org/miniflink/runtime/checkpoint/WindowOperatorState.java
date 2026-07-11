@@ -1,19 +1,24 @@
 package org.miniflink.runtime.checkpoint;
 
 import org.miniflink.runtime.OperatorState;
+import java.io.Serializable;
 import java.util.List;
 
 /** WindowOperator 的快照：待触发 timers + 已注册 (key, window)。 */
 public class WindowOperatorState implements OperatorState {
-    /** 单个已注册窗口：(key, start, end)。 */
-    public record WindowEntry(Object key, long start, long end) { }
+    private static final long serialVersionUID = 1L;
+
+    /** 单个已注册窗口：(key, start, end)。Serializable 以随 OperatorState 持久化（key 须可序列化）。 */
+    public record WindowEntry(Object key, long start, long end) implements Serializable {
+        private static final long serialVersionUID = 1L;
+    }
 
     private final List<Long> pendingTimers;
     private final List<WindowEntry> windows;
 
     public WindowOperatorState(List<Long> pendingTimers, List<WindowEntry> windows) {
-        this.pendingTimers = pendingTimers;
-        this.windows = windows;
+        this.pendingTimers = List.copyOf(pendingTimers);   // 防御性拷贝（checkpoint 状态对象应不可变）
+        this.windows = List.copyOf(windows);
     }
 
     public List<Long> getPendingTimers() { return pendingTimers; }
