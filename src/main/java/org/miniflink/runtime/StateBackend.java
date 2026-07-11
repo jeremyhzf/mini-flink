@@ -6,4 +6,6 @@ public interface StateBackend {
     <T> ListState<T> getListState(String name);
     <K, V> MapState<K, V> getMapState(String name);
     void setCurrentKey(Object key);
+    StateSnapshot snapshot();
+    void restore(StateSnapshot snapshot);
 }

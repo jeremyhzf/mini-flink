@@ -59,4 +59,46 @@ public class MemoryStateBackend implements StateBackend {
     public <K, V> MapState<K, V> getMapState(String name) {
         return new MapStateImpl<>(this, name);
     }
+
+    @Override
+    public StateSnapshot snapshot() {
+        return new StateSnapshot(copyVV(valueStore), copyVL(listStore), copyVM(mapStore));
+    }
+
+    @Override
+    public void restore(StateSnapshot s) {
+        this.valueStore.clear();
+        for (var e : copyVV(s.getValueStore()).entrySet()) valueStore.put(e.getKey(), e.getValue());
+        this.listStore.clear();
+        for (var e : copyVL(s.getListStore()).entrySet()) listStore.put(e.getKey(), e.getValue());
+        this.mapStore.clear();
+        for (var e : copyVM(s.getMapStore()).entrySet()) mapStore.put(e.getKey(), e.getValue());
+        this.currentKey = null;
+    }
+
+    private static Map<String, Map<Object, Object>> copyVV(Map<String, Map<Object, Object>> src) {
+        Map<String, Map<Object, Object>> dst = new HashMap<>();
+        for (var e : src.entrySet()) dst.put(e.getKey(), new HashMap<>(e.getValue()));
+        return dst;
+    }
+
+    private static Map<String, Map<Object, List<Object>>> copyVL(Map<String, Map<Object, List<Object>>> src) {
+        Map<String, Map<Object, List<Object>>> dst = new HashMap<>();
+        for (var e : src.entrySet()) {
+            Map<Object, List<Object>> inner = new HashMap<>();
+            for (var ie : e.getValue().entrySet()) inner.put(ie.getKey(), new ArrayList<>(ie.getValue()));
+            dst.put(e.getKey(), inner);
+        }
+        return dst;
+    }
+
+    private static Map<String, Map<Object, Map<Object, Object>>> copyVM(Map<String, Map<Object, Map<Object, Object>>> src) {
+        Map<String, Map<Object, Map<Object, Object>>> dst = new HashMap<>();
+        for (var e : src.entrySet()) {
+            Map<Object, Map<Object, Object>> inner = new HashMap<>();
+            for (var ie : e.getValue().entrySet()) inner.put(ie.getKey(), new HashMap<>(ie.getValue()));
+            dst.put(e.getKey(), inner);
+        }
+        return dst;
+    }
 }
