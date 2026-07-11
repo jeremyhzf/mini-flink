@@ -23,6 +23,8 @@ class SourceTaskTest {
 
         assertEquals("a", ((Record<String>) ch.receive()).value());
         assertEquals("b", ((Record<String>) ch.receive()).value());
+        // source 结束广播 +∞ watermark（触发下游剩余窗口），再发 EOB
+        assertEquals(Long.MAX_VALUE, ((Watermark) ch.receive()).getTimestamp());
         assertInstanceOf(EndOfBroadcast.class, ch.receive());
     }
 }

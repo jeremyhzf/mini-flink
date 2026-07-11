@@ -40,4 +40,12 @@ public class OperatorChain<IN, OUT> {
             op.close();
         }
     }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public void onWatermark(Watermark watermark) {
+        // 链内每个算子都收到 watermark（链化算子共享线程，watermark 流过链）
+        for (Operator<?, ?> op : operators) {
+            ((Operator) op).onWatermark(watermark);
+        }
+    }
 }

@@ -21,6 +21,7 @@ public class SourceTask implements Task {
         try {
             sourceOperator.open((Collector) out, ctx);
             sourceOperator.run();
+            broadcastWatermark(outputs, new Watermark(Long.MAX_VALUE));  // +∞：触发所有剩余窗口
             broadcastEob(outputs, ctx.getSubtaskIndex());
         } catch (InterruptedException ie) {
             Thread.currentThread().interrupt();

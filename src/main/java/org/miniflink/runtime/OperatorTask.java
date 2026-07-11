@@ -35,6 +35,9 @@ public class OperatorTask implements Task {
                 } else if (e instanceof Record<?> r) {
                     ctx.setCurrentTimestamp(r.timestamp());   // 入链：设当前 ts
                     rawChain.processElement(r.value());
+                } else if (e instanceof Watermark wm) {
+                    chain.onWatermark(wm);                       // 链内算子处理（WindowOperator 触发窗口）
+                    broadcastWatermark(outputs, wm);             // 转发到下游（保持 watermark 流）
                 }
             }
             broadcastEob(outputs, ctx.getSubtaskIndex());

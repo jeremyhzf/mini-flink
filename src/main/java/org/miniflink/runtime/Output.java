@@ -58,4 +58,16 @@ public class Output {
             }
         }
     }
+
+    /** 向所有下游 channel 广播 watermark（watermark 不分区）。 */
+    public void sendWatermark(Watermark wm) {
+        for (Channel c : downstreamChannels) {
+            try {
+                c.send(wm);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException("发送 Watermark 被中断", e);
+            }
+        }
+    }
 }

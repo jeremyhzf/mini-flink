@@ -10,4 +10,11 @@ public interface Task extends Runnable {
             o.sendEob(upstreamIndex);
         }
     }
+
+    /** 向所有出边广播 watermark（source 结束 / 算子转发用）。 */
+    default void broadcastWatermark(List<Output> outputs, Watermark wm) {
+        for (Output o : outputs) {
+            o.sendWatermark(wm);
+        }
+    }
 }

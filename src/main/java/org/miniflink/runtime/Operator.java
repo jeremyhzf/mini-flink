@@ -6,6 +6,11 @@ public interface Operator<IN, OUT> {
     void processElement(IN record) throws Exception;
     void close();
 
+    /** 收到 watermark（事件时间推进）。普通算子默认不处理（由 OperatorTask 统一转发）。 */
+    default void onWatermark(Watermark watermark) {
+        // 默认空：map/filter 等透传算子不消费 watermark
+    }
+
     /**
      * 复制出独立的算子实例（共享无状态的用户函数）。
      * 多并行度下每个 subtask 必须持有独立算子——open 写入的 per-subtask 状态
