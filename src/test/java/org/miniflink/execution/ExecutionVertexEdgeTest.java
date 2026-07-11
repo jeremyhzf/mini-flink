@@ -10,16 +10,18 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ExecutionVertexEdgeTest {
 
+    /** 持有 source 算子的 vertex 被判定为 source。 */
     @Test
-    void sourceVertex判定为source() {
+    void sourceVertexIdentifiedAsSource() {
         ExecutionVertex sv = new ExecutionVertex(1, 0, 1, List.of(),
                 new org.miniflink.runtime.operator.SourceOperatorImpl<>(
                         new org.miniflink.connector.CollectionSource<>(List.of("x"))));
         assertTrue(sv.isSource());
     }
 
+    /** 处理 vertex 持有算子列表且其 sourceOperator 为 null 时非 source。 */
     @Test
-    void 处理vertex持有算子且非source() {
+    void processingVertexHoldsOperatorsAndIsNotSource() {
         ExecutionVertex v = new ExecutionVertex(2, 0, 2,
                 List.of(new MapOperator<>((org.miniflink.api.function.MapFunction<Integer, Integer>) x -> x)), null);
         // 注意：sourceOperator 用一个非 null 占位才 isSource=true；这里传 null → 非 source
@@ -29,8 +31,9 @@ class ExecutionVertexEdgeTest {
         assertEquals(2, v.getParallelism());
     }
 
+    /** edge 持有上游、下游、partitioner 与 keySelector。 */
     @Test
-    void edge持有上下游与分区器() {
+    void edgeHoldsUpstreamDownstreamAndPartitioner() {
         ExecutionVertex a = new ExecutionVertex(1, 0, 1, List.of(), null);
         ExecutionVertex b = new ExecutionVertex(2, 0, 1, List.of(), null);
         KeySelector<Integer, Integer> ks = x -> x;

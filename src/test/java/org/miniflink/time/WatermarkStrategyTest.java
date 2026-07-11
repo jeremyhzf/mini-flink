@@ -5,8 +5,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class WatermarkStrategyTest {
 
+    /** boundedOutOfOrderness 生成的 watermark 等于 maxTs 减去乱序容忍度。 */
     @Test
-    void boundedOutOfOrderness生成watermark等于maxTs减乱序容忍() {
+    void boundedOutOfOrdernessWatermarkEqualsMaxTsMinusAllowedLateness() {
         WatermarkStrategy<String> strategy = WatermarkStrategy
                 .<String>forBoundedOutOfOrderness(java.time.Duration.ofMillis(100), s -> Long.parseLong(s));
         assertEquals(Long.MIN_VALUE, strategy.currentWatermark());   // 初始
@@ -21,8 +22,9 @@ class WatermarkStrategyTest {
         assertEquals(2900, strategy.currentWatermark());             // 3000-100
     }
 
+    /** BoundedOutOfOrdernessWatermarks.copy() 返回状态隔离的独立实例。 */
     @Test
-    void BoundedOutOfOrderness的copy返回独立实例状态隔离() {
+    void boundedOutOfOrdernessCopyReturnsIsolatedInstance() {
         BoundedOutOfOrdernessWatermarks<String> s1 = new BoundedOutOfOrdernessWatermarks<>(100, s -> Long.parseLong(s));
         s1.extractTimestamp("1000");   // s1.maxTimestamp=1000
         BoundedOutOfOrdernessWatermarks<String> s2 = s1.copy();

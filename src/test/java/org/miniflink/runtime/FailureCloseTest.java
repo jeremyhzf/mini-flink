@@ -30,8 +30,9 @@ class FailureCloseTest {
         @Override public Integer map(Integer x) { return x; }
     }
 
+    /** 验证单 task 异常时 execute 干净失败而不挂起。 */
     @Test
-    void 单task异常时execute干净失败不挂起() {
+    void singleTaskExceptionFailsExecuteCleanlyWithoutHanging() {
         StreamExecutionEnvironment env = new StreamExecutionEnvironment();
         CollectSink<Integer> sink = new CollectSink<>();
         env.fromCollection(List.of(1, 2, 3, 4))
@@ -46,16 +47,9 @@ class FailureCloseTest {
         assertTrue(ex.getMessage().contains("作业执行失败") || ex.getCause() != null);
     }
 
-    /**
-     * 真正复现「execute 永久挂起」缺口：下游 map 并行度=2 与 BoomMap(=1) 不同，
-     * ExecutionGraph 自动改 rebalance → BoomMap 独立成组；BoomMap 抛异常后，
-     * 下游两个 map 子任务阻塞在 Channel.receive()，旧代码 join() 无超时 → 永久挂起。
-     * 修复后：任一异常 → 中断全部 → 阻塞的 receive 抛 InterruptedException → 干净失败。
-     *
-     * 多次迭代以稳定复现「早失败 / 晚启动」的 race（单次受调度影响，在隔离运行下未必触发）。
-     */
+    /** 验证多 task 拓扑（rebalance）下单 task 异常时 execute 干净失败而非永久挂起，多次迭代稳定复现 race。 */
     @Test
-    void 多task拓扑下单task异常时execute不挂起() {
+    void multiTaskTopologyTaskExceptionFailsExecuteWithoutHanging() {
         for (int i = 0; i < 5; i++) {
             StreamExecutionEnvironment env = new StreamExecutionEnvironment();
             CollectSink<Integer> sink = new CollectSink<>();

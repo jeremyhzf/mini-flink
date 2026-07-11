@@ -20,8 +20,9 @@ class SubtaskSnapshotTest {
         @Override public void stop() { }
     }
 
+    /** operatorTask 在 onAligned 时对 backend 做快照并向 coordinator ack。 */
     @Test
-    void operatorTaskOnAligned快照backend并ack() throws Exception {
+    void operatorTaskOnAlignedSnapshotsBackendAndAcks() throws Exception {
         // 简化：直接验证 OperatorTask 在有 coordinator 时 onAligned 产出 SubtaskSnapshot
         // 构造一个带 ValueState 的链：用 ReduceOperator 更直观，这里用 MapOperator（无 state）验证 ack 触发
         OperatorChain<Integer,Integer> chain = new OperatorChain<>(List.of(

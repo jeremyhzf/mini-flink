@@ -10,8 +10,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class DataStreamApiTest {
 
+    /** 链式调用 source → map → sink 应构建出上游正确衔接、节点命名的逻辑链。 */
     @Test
-    void 链式调用应构建正确的逻辑链结构() {
+    void chainedCallsBuildCorrectLogicalChain() {
         StreamExecutionEnvironment env = new StreamExecutionEnvironment();
         DataStream<String> source = env.fromCollection(List.of("a", "b"));
         DataStream<Integer> mapped = source.map(String::length);
@@ -24,8 +25,9 @@ class DataStreamApiTest {
         assertEquals("map", mapNode.getName());
     }
 
+    /** filter 复用同一上游 transformation 并返回以 filter 命名的新流。 */
     @Test
-    void filter应复用同一上游并返回新流() {
+    void filterReusesSameUpstreamAndReturnsNewStream() {
         StreamExecutionEnvironment env = new StreamExecutionEnvironment();
         DataStream<Integer> source = env.fromCollection(List.of(1, 2, 3));
         DataStream<Integer> filtered = source.filter(x -> x > 1);

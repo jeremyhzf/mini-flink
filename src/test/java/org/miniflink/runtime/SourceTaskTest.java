@@ -11,8 +11,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class SourceTaskTest {
 
+    /** run 后下游 Channel 应依次收到数据记录、+∞ watermark 与 EOB。 */
     @Test
-    void run后下游Channel应收到数据与EOB() throws Exception {
+    void downstreamChannelReceivesDataAndEobAfterRun() throws Exception {
         Channel ch = new Channel(8);
         Output out = new Output(List.of(ch), new ForwardPartitioner(), null);
         SourceTask task = new SourceTask(

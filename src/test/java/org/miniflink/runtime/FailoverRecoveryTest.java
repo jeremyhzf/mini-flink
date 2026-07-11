@@ -67,8 +67,9 @@ class FailoverRecoveryTest {
         }
     }
 
+    /** 验证故障后从 checkpoint 恢复的最终结果与无故障一致（exactly-once 不丢不重）。 */
     @Test
-    void 故障后从checkpoint恢复结果与无故障一致() throws Exception {
+    void recoveryFromCheckpointMatchesNoFailureResult() throws Exception {
         int total = 10;
         List<String> data = new ArrayList<>();
         for (int i = 0; i < total; i++) {
@@ -99,12 +100,9 @@ class FailoverRecoveryTest {
                 "恢复重跑应处理全部 " + total + " 条（seen=" + failOnce.seen.get() + "）");
     }
 
-    /**
-     * 对照组：无故障时同一作业结果 = total。验证 FailOnce 未触发（冷启正常路径），
-     * 也作为上面 failover 用例期望值的锚点。
-     */
+    /** 对照组：无故障时同一作业 reduce 求和 = total，作为 failover 期望值的锚点。 */
     @Test
-    void 无故障时reduce求和正确() throws Exception {
+    void reduceSumCorrectWithoutFailure() throws Exception {
         int total = 10;
         List<String> data = new ArrayList<>();
         for (int i = 0; i < total; i++) {

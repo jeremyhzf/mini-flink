@@ -12,8 +12,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class OperatorTaskTest {
 
+    /** OperatorTask 处理上游数据并在所有上游 EOB 后向下游广播。 */
     @Test
-    void 处理数据并在所有上游EOB后向下游广播() throws Exception {
+    void processesDataAndBroadcastsDownstreamAfterAllUpstreamEob() throws Exception {
         Channel input = new Channel(8);
         input.send(new Record<>(1, 0L));
         input.send(new Record<>(2, 0L));
@@ -32,8 +33,9 @@ class OperatorTaskTest {
         assertInstanceOf(EndOfBroadcast.class, outCh.receive());
     }
 
+    /** 多上游时需等所有上游 EOB 到齐才退出，期间数据不丢失。 */
     @Test
-    void 多上游时等所有EOB才退出不丢数据() throws Exception {
+    void waitsForAllUpstreamEobBeforeExitWithoutDataLoss() throws Exception {
         Channel input = new Channel(8);
         input.send(new Record<>(1, 0L));
         input.send(EndOfBroadcast.INSTANCE);   // 上游 1 的 EOB

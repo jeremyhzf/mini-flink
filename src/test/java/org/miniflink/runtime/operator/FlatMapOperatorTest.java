@@ -9,8 +9,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class FlatMapOperatorTest {
 
+    /** 验证 flatMap 算子一条输入可产生零或多条输出。 */
     @Test
-    void 一条输入可产生零或多条输出() throws Exception {
+    void singleInputMayProduceZeroOrMoreOutputs() throws Exception {
         // 把句子拆成单词
         FlatMapOperator<String, String> op = new FlatMapOperator<>(
                 (FlatMapFunction<String, String>) (line, out) -> {

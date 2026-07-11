@@ -14,8 +14,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ListEncapsulationTest {
 
+    /** StreamGraph 的 getter 返回不可变视图，对 getTransformations/getSinks 调用 add 抛出 UnsupportedOperationException。 */
     @Test
-    void StreamGraph的getter返回不可变视图() {
+    void streamGraphGettersReturnImmutableView() {
         StreamGraph sg = new StreamGraph();
         sg.addTransformation(new SourceTransformation<>(1, "s",
                 new SourceOperatorImpl<>(new CollectionSource<>(List.of(1)))));
@@ -23,8 +24,9 @@ class ListEncapsulationTest {
         assertThrows(UnsupportedOperationException.class, () -> sg.getSinks().add(null));
     }
 
+    /** CollectSink.getResults 返回与内部数据隔离的独立可变快照，后续追加与快照改动互不影响。 */
     @Test
-    void CollectSink的getResults返回与内部隔离的独立快照() {
+    void collectSinkGetResultsReturnsIsolatedSnapshot() {
         CollectSink<Integer> sink = new CollectSink<>();
         sink.add(1);
         List<Integer> snapshot = sink.getResults();

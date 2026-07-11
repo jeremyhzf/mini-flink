@@ -12,8 +12,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class StreamGraphTest {
 
+    /** 从 sink 回溯可得到完整的 source → map → sink 单线性链。 */
     @Test
-    void 从sink回溯应能得到完整单线性链() {
+    void traceBackFromSinkBuildsCompleteLinearChain() {
         SourceTransformation<String> source = new SourceTransformation<>(
                 1, "source", new SourceOperatorImpl<>(new CollectionSource<>(List.of("a"))));
         OneInputTransformation<String, String> map = new OneInputTransformation<>(

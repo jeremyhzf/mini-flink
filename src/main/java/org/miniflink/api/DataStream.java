@@ -19,8 +19,8 @@ import org.miniflink.runtime.operator.SinkOperator;
 public class DataStream<T> {
     private final StreamExecutionEnvironment env;
     private final Transformation<T> transformation;
-    private Partitioner nextPartitioner = null;   // keyBy 设置，供下一个 transformation 使用
-    private KeySelector<T, ?> nextKeySelector = null;
+    private final Partitioner nextPartitioner = null;   // keyBy 设置，供下一个 transformation 使用
+    private final KeySelector<T, ?> nextKeySelector = null;
 
     public DataStream(StreamExecutionEnvironment env, Transformation<T> transformation) {
         this.env = env;

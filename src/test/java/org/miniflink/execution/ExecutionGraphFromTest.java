@@ -31,8 +31,9 @@ class ExecutionGraphFromTest {
         return sg;
     }
 
+    /** 单线性链展开后得到 source 与 chain 两组 vertices，且仅有一条 edge。 */
     @Test
-    void 单线性链应展开为source与chain两组vertices与一条边() {
+    void linearChainExpandsToSourceAndChainVerticesWithOneEdge() {
         ExecutionGraph g = ExecutionGraph.from(buildLinearGraph());
         // source(p1) + [map,sink] chain(p1) → 2 vertices, 1 edge
         assertEquals(2, g.getVertices().size());
@@ -42,8 +43,9 @@ class ExecutionGraphFromTest {
         assertEquals(1, g.getEdges().size());
     }
 
+    /** 存在多个 sink 时 ExecutionGraph.from 抛 IllegalStateException。 */
     @Test
-    void 多sink应抛IllegalStateException() {
+    void multipleSinksThrowsIllegalStateException() {
         StreamGraph sg = new StreamGraph();
         SourceTransformation<Integer> src = new SourceTransformation<>(1, "s",
                 new SourceOperatorImpl<>(new CollectionSource<>(List.of(1))));
@@ -57,8 +59,9 @@ class ExecutionGraphFromTest {
         assertThrows(IllegalStateException.class, () -> ExecutionGraph.from(sg));
     }
 
+    /** forward 边在两侧并行度不同时降级为 rebalance 分区。 */
     @Test
-    void forward边在两侧并行度不同时降级为rebalance() {
+    void forwardEdgeDegradesToRebalanceWhenParallelismDiffers() {
         // source(parallelism=2) → map(p=1) → sink(p=1)：map 默认 forward，但 srcs.size=2 != tgts.size=1
         StreamGraph sg = new StreamGraph();
         SourceTransformation<Integer> src = new SourceTransformation<>(1, "source",
@@ -79,8 +82,9 @@ class ExecutionGraphFromTest {
         assertTrue(g.getEdges().get(0).getPartitioner() instanceof RebalancePartitioner);
     }
 
+    /** keyBy 处的 hash partitioner 断开 chain 化，边界保持各自分区策略。 */
     @Test
-    void keyBy处的hash分区器断开链化() {
+    void hashPartitionerAtKeyByBreaksChaining() {
         // source → map1(forward) → map2(hash/keyBy) → sink：chain 在 keyBy 处断开
         StreamGraph sg = new StreamGraph();
         SourceTransformation<Integer> src = new SourceTransformation<>(1, "source",

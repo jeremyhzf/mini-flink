@@ -11,8 +11,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class OutputCollectorTest {
 
+    /** 验证 forward 按上游索引路由到对应的下游通道。 */
     @Test
-    void forward应路由到对应索引的通道() throws Exception {
+    void forwardRoutesToChannelByUpstreamIndex() throws Exception {
         Channel c0 = new Channel(2);
         Channel c1 = new Channel(2);
         Output out = new Output(List.of(c0, c1), new ForwardPartitioner(), null);
@@ -23,8 +24,9 @@ class OutputCollectorTest {
         assertInstanceOf(Record.class, c0.receive());
     }
 
+    /** 验证 keyBy 按 key 哈希路由且同 key 落同一通道。 */
     @Test
-    void keyBy应按key哈希路由且同key同通道() throws Exception {
+    void keyByRoutesByKeyHashAndKeepsSameKeyInSameChannel() throws Exception {
         Channel c0 = new Channel(4);
         Channel c1 = new Channel(4);
         Output out = new Output(List.of(c0, c1), new HashPartitioner(),
@@ -38,8 +40,9 @@ class OutputCollectorTest {
         assertInstanceOf(Record.class, c0.receive());
     }
 
+    /** 验证 forward 的 sendEob 仅发往上游对应的下游通道。 */
     @Test
-    void forward的sendEob只发往上游对应下游通道() throws Exception {
+    void forwardSendEobOnlyGoesToCorrespondingDownstreamChannel() throws Exception {
         Channel c0 = new Channel(2);
         Channel c1 = new Channel(2);
         Output out = new Output(List.of(c0, c1), new ForwardPartitioner(), null);
@@ -50,8 +53,9 @@ class OutputCollectorTest {
         assertTrue(c1.isEmpty(), "forward 下游 1 不应收到上游 0 的 EOB");
     }
 
+    /** 验证 rebalance 的 sendEob 向所有下游通道广播 EOB。 */
     @Test
-    void rebalance的sendEob向所有下游通道广播EOB() throws Exception {
+    void rebalanceSendEobBroadcastsEobToAllDownstreamChannels() throws Exception {
         Channel c0 = new Channel(2);
         Channel c1 = new Channel(2);
         Output out = new Output(List.of(c0, c1), new RebalancePartitioner(), null);

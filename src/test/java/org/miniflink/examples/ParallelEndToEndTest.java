@@ -16,8 +16,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 class ParallelEndToEndTest {
 
+    /** 验证多并行度 forward 模式下数据被正确并行处理，结果汇总后与期望一致。 */
     @Test
-    void 多并行度forward下数据正确并行处理() throws Exception {
+    void dataProcessedCorrectlyInParallelUnderMultiParallelismForward() throws Exception {
         StreamExecutionEnvironment env = new StreamExecutionEnvironment();
         CollectSink<Integer> sink = new CollectSink<>();
 

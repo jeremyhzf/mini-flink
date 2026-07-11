@@ -10,8 +10,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class StreamExecutorTest {
 
+    /** 多线程端到端执行单并行度 forward 链，顺序保持。 */
     @Test
-    void 多线程端到端执行单并行度链() throws Exception {
+    void multiThreadedEndToEndExecutionOfSingleParallelismChain() throws Exception {
         StreamExecutionEnvironment env = new StreamExecutionEnvironment();
         CollectSink<Integer> sink = new CollectSink<>();
         env.fromCollection(List.of(1, 2, 3))

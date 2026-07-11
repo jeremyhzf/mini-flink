@@ -10,8 +10,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class EndToEndExecutionTest {
 
+    /** source → map → filter → sink 链端到端执行，过滤后输出预期结果。 */
     @Test
-    void source_map_filter_sink应端到端跑通() throws Exception {
+    void sourceMapFilterSinkRunsEndToEnd() throws Exception {
         StreamExecutionEnvironment env = new StreamExecutionEnvironment();
         CollectSink<Integer> sink = new CollectSink<>();
 
@@ -25,8 +26,9 @@ class EndToEndExecutionTest {
         assertEquals(List.of(30, 40, 50), sink.getResults());
     }
 
+    /** flatMap → map → sink 链端到端执行，分词转大写后输出预期结果。 */
     @Test
-    void flatMap链应端到端跑通() throws Exception {
+    void flatMapChainRunsEndToEnd() throws Exception {
         StreamExecutionEnvironment env = new StreamExecutionEnvironment();
         CollectSink<String> sink = new CollectSink<>();
 

@@ -5,8 +5,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class StateSnapshotTest {
 
+    /** snapshot 深拷贝 backend 状态，快照后修改不影响快照，restore 还原快照时的值。 */
     @Test
-    void snapshot深拷贝并在restore后还原() {
+    void snapshotDeepCopiesAndRestoresAfterRestore() {
         MemoryStateBackend b = new MemoryStateBackend();
         b.setCurrentKey("k1");
         ValueState<Integer> v = b.getValueState("cnt");
@@ -27,8 +28,9 @@ class StateSnapshotTest {
         assertEquals(10, restored.getMapState("map").get("a"));
     }
 
+    /** restore 后 currentKey 被重置，查询需重新 setCurrentKey。 */
     @Test
-    void restore重置currentKey() {
+    void restoreResetsCurrentKey() {
         MemoryStateBackend b = new MemoryStateBackend();
         b.setCurrentKey("k1");
         b.getValueState("cnt").update(5);

@@ -12,8 +12,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class OperatorChainTest {
 
+    /** 链化算子应在链内 forward 传递并仅在链尾输出。 */
     @Test
-    void 链化算子应链内forward传递并输出到链尾() throws Exception {
+    void chainedOperatorsForwardWithinChainAndEmitAtTail() throws Exception {
         // map(x -> x+1) -> filter(x > 2)，链尾输出到 ListCollector
         OperatorChain<Integer, Integer> chain = new OperatorChain<>(List.of(
                 new MapOperator<>((MapFunction<Integer, Integer>) x -> x + 1),
@@ -29,8 +30,9 @@ class OperatorChainTest {
         assertEquals(List.of(3, 4), out.getResult());
     }
 
+    /** 空算子列表应在构造时被拒绝。 */
     @Test
-    void 空算子列表应拒绝构造() {
+    void emptyOperatorListRejectedAtConstruction() {
         assertThrows(IllegalArgumentException.class, () -> new OperatorChain<Object, Object>(List.of()));
     }
 }

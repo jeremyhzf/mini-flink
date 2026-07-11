@@ -15,8 +15,9 @@ class WindowOperatorTest {
     /** 记录带 ts：(value, ts)。 */
     record TE(int value, long ts) { }
 
+    /** 验证窗口 end 到达时输出最终累加值一次。 */
     @Test
-    void 窗口结束输出最终累加值一次() throws Exception {
+    void windowEndEmitsFinalAccumulatedValueOnce() throws Exception {
         // keySelector: 按 value 分组；reduce: 求和；窗口 1s
         WindowOperator<TE> op = new WindowOperator<>(
                 TumblingEventTimeWindows.<TE>of(java.time.Duration.ofSeconds(1)),
@@ -41,8 +42,9 @@ class WindowOperatorTest {
         assertEquals(List.of(new TE(10, 1700)), out.getResult());
     }
 
+    /** 验证不同 key 的窗口各自独立累加。 */
     @Test
-    void 不同key的窗口各自累加() throws Exception {
+    void windowsAccumulateIndependentlyPerKey() throws Exception {
         WindowOperator<TE> op = new WindowOperator<>(
                 TumblingEventTimeWindows.<TE>of(java.time.Duration.ofSeconds(1)),
                 (ReduceFunction<TE>) (a, b) -> new TE(a.value + b.value, b.ts));
@@ -63,8 +65,9 @@ class WindowOperatorTest {
         assertTrue(out.getResult().contains(new TE(2, 1500)));
     }
 
+    /** 验证不同窗口按 end 分别触发。 */
     @Test
-    void 不同窗口按end分别触发() throws Exception {
+    void distinctWindowsFireSeparatelyByEnd() throws Exception {
         WindowOperator<TE> op = new WindowOperator<>(
                 TumblingEventTimeWindows.<TE>of(java.time.Duration.ofSeconds(1)),
                 (ReduceFunction<TE>) (a, b) -> new TE(a.value + b.value, b.ts));
@@ -85,8 +88,9 @@ class WindowOperatorTest {
         assertTrue(out.getResult().contains(new TE(9, 1500)));
     }
 
+    /** 验证迟到数据被丢弃且不重复触发窗口。 */
     @Test
-    void 迟到数据被丢弃不重复触发() throws Exception {
+    void lateDataDroppedWithoutRetriggering() throws Exception {
         // spec §8：window.end <= currentWatermark 的迟到记录丢弃，不重复触发已清理窗口
         WindowOperator<TE> op = new WindowOperator<>(
                 TumblingEventTimeWindows.<TE>of(java.time.Duration.ofSeconds(1)),

@@ -84,7 +84,7 @@ public class CheckpointExample {
         env.addSource(new ThrottledSource(data, 50))   // 每条 sleep 50ms → 故障前有 ~20 个 checkpoint 周期
            .map(new FailAt(3))                          // 第 3 条抛 → 触发 failover
            .keyBy(WC::word)
-           .reduce((ReduceFunction<WC>) (a, b) -> new WC(a.word, a.count + b.count))
+           .reduce((a, b) -> new WC(a.word, a.count + b.count))
            .addSink(sink::add);
 
         env.execute("checkpoint-example");

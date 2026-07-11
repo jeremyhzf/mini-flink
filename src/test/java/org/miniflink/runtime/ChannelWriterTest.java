@@ -5,8 +5,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ChannelWriterTest {
 
+    /** 验证 collect 把值包装成 Record 写入 Channel。 */
     @Test
-    void collect应把值包装成Record写入Channel() throws Exception {
+    void collectWrapsValueIntoRecordWrittenToChannel() throws Exception {
         Channel ch = new Channel(4);
         ChannelWriter<String> writer = new ChannelWriter<>(ch);
 
@@ -17,8 +18,9 @@ class ChannelWriterTest {
         assertEquals("hello", ((Record<String>) e).value());
     }
 
+    /** 验证多次 collect 按序写入 Channel。 */
     @Test
-    void 多次collect应按序写入() throws Exception {
+    void multipleCollectsWriteInOrder() throws Exception {
         Channel ch = new Channel(8);
         ChannelWriter<Integer> writer = new ChannelWriter<>(ch);
 

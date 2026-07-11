@@ -13,8 +13,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class DataStreamKeyByTest {
 
+    /** keyBy 后的 reduce 使用 hash 分区并携带 keySelector。 */
     @Test
-    void keyBy后reduce使用hash分区() {
+    void keyByThenReduceUsesHashPartitioning() {
         StreamExecutionEnvironment env = new StreamExecutionEnvironment();
         DataStream<Integer> reduced = env.fromCollection(List.of(1, 2, 3))
                 .keyBy((KeySelector<Integer, Integer>) x -> x)
@@ -24,8 +25,9 @@ class DataStreamKeyByTest {
         assertNotNull(tx.getKeySelector());
     }
 
+    /** reduce 之后的普通算子恢复使用 forward 分区。 */
     @Test
-    void reduce后的普通算子恢复forward() {
+    void operatorAfterReduceRestoresForwardPartitioning() {
         StreamExecutionEnvironment env = new StreamExecutionEnvironment();
         DataStream<Integer> s = env.fromCollection(List.of(1, 2, 3))
                 .keyBy((KeySelector<Integer, Integer>) x -> x)
@@ -35,8 +37,9 @@ class DataStreamKeyByTest {
         assertInstanceOf(ForwardPartitioner.class, tx.getPartitioner());
     }
 
+    /** setParallelism 将并行度写入底层 transformation。 */
     @Test
-    void setParallelism应设到transformation() {
+    void setParallelismPropagatesToTransformation() {
         StreamExecutionEnvironment env = new StreamExecutionEnvironment();
         DataStream<Integer> src = env.fromCollection(List.of(1, 2, 3)).setParallelism(2);
         assertEquals(2, src.getTransformation().getParallelism());

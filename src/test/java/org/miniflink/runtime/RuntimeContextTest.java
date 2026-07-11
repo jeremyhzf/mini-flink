@@ -7,8 +7,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class RuntimeContextTest {
 
+    /** setCurrentKey 转发到 backend 且按 key 隔离状态。 */
     @Test
-    void setCurrentKey转发backend且key隔离() {
+    void setCurrentKeyForwardsToBackendAndIsolatesByKey() {
         RuntimeContextImpl ctx = new RuntimeContextImpl(0, 1, null);
         ValueState<Integer> state = ctx.getStateBackend().getValueState("acc");
 
@@ -21,8 +22,9 @@ class RuntimeContextTest {
         assertEquals(1, state.value()); // a 仍在
     }
 
+    /** RuntimeContextImpl 持有 subtaskIndex、parallelism 与 keySelector。 */
     @Test
-    void 持有subtaskIndex与keySelector() {
+    void holdsSubtaskIndexAndKeySelector() {
         KeySelector<String, String> ks = s -> s;
         RuntimeContextImpl ctx = new RuntimeContextImpl(1, 2, ks);
         assertEquals(1, ctx.getSubtaskIndex());

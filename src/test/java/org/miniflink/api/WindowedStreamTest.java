@@ -13,8 +13,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class WindowedStreamTest {
 
+    /** window 后的 reduce 构建 hash 分区、算子为 WindowOperator 的 transformation。 */
     @Test
-    void window后reduce建WindowOperator的hash分区transformation() {
+    void windowThenReduceBuildsWindowOperatorHashPartitionedTransformation() {
         StreamExecutionEnvironment env = new StreamExecutionEnvironment();
         DataStream<Integer> reduced = env.fromCollection(List.of(1, 2, 3))
                 .keyBy((KeySelector<Integer, Integer>) x -> x)

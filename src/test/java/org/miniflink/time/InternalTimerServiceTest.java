@@ -7,8 +7,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class InternalTimerServiceTest {
 
+    /** advanceTo 按时间顺序触发已到点的 event-time timer。 */
     @Test
-    void advanceTo触发到点timer按time顺序() {
+    void advanceToFiresDueTimersInTimeOrder() {
         InternalTimerService svc = new InternalTimerService();
         List<Long> fired = new ArrayList<>();
         TimerHandler handler = fired::add;
@@ -25,8 +26,9 @@ class InternalTimerServiceTest {
         assertEquals(List.of(100L, 200L, 300L), fired);
     }
 
+    /** 已删除的 timer 在 advanceTo 时不再触发。 */
     @Test
-    void deleteTimer不触发() {
+    void deleteTimerPreventsFiring() {
         InternalTimerService svc = new InternalTimerService();
         List<Long> fired = new ArrayList<>();
         svc.registerEventTimeTimer(100);

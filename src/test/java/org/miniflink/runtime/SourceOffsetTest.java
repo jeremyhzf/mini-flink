@@ -10,8 +10,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class SourceOffsetTest {
 
+    /** 恢复时根据 offset 跳过已发记录，只重放 offset 之后的元素。 */
     @Test
-    void 恢复时从offset跳过已发记录() throws Exception {
+    void restoreSkipsAlreadyEmittedRecordsByOffset() throws Exception {
         // source: [1,2,3,4]，subtask 0/parallelism 1 → 全发
         SourceOperatorImpl<Integer> op = new SourceOperatorImpl<>(new CollectionSource<>(List.of(1, 2, 3, 4)));
         ListCollector<Integer> out = new ListCollector<>();

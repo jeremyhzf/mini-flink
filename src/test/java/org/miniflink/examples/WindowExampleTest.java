@@ -20,8 +20,9 @@ class WindowExampleTest {
 
     record Event(String key, int value, long ts) { }
 
+    /** 验证滚动窗口按 key 累加，且在窗口结束时各输出最终累加值一次。 */
     @Test
-    void 滚动窗口按key累加并窗口结束输出() throws Exception {
+    void tumblingWindowAccumulatesByKeyAndEmitsAtWindowEnd() throws Exception {
         StreamExecutionEnvironment env = new StreamExecutionEnvironment();
         CollectSink<Event> sink = new CollectSink<>();
 

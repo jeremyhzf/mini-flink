@@ -11,8 +11,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class SourceOperatorImplTest {
 
+    /** 验证 run 把源数据全部输出到下游。 */
     @Test
-    void run应把源数据全部输出到下游() throws Exception {
+    void runEmitsAllSourceDataDownstream() throws Exception {
         SourceOperatorImpl<String> op = new SourceOperatorImpl<>(new CollectionSource<>(List.of("x", "y", "z")));
         ListCollector<String> downstream = new ListCollector<>();
         op.open(downstream, new RuntimeContextImpl(0, 1, null));

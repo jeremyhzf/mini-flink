@@ -20,8 +20,9 @@ class WordCountExampleTest {
 
     record WC(String word, int count) { }
 
+    /** 验证词频统计正确累加：相同单词的计数被 reduce 完整累加得到最终值。 */
     @Test
-    void 词频统计正确累加() throws Exception {
+    void wordCountAccumulatesCorrectly() throws Exception {
         StreamExecutionEnvironment env = new StreamExecutionEnvironment();
         CollectSink<WC> sink = new CollectSink<>();
 

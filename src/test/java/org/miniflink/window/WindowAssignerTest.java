@@ -6,8 +6,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class WindowAssignerTest {
 
+    /** 滚动窗口将单条记录分配到单个 TimeWindow。 */
     @Test
-    void 滚动窗口分配单个窗口() {
+    void tumblingWindowAssignsSingleWindow() {
         TumblingEventTimeWindows<Object> assigner = TumblingEventTimeWindows.of(java.time.Duration.ofSeconds(1));
         Collection<TimeWindow> ws = assigner.assignWindows(null, 1500L);   // 1500ms → [1000, 2000)
         assertEquals(1, ws.size());
@@ -17,8 +18,9 @@ class WindowAssignerTest {
         assertTrue(assigner.isEventTime());
     }
 
+    /** 滑动窗口将单条记录分配到多个重叠的 TimeWindow。 */
     @Test
-    void 滑动窗口分配多个重叠窗口() {
+    void slidingWindowAssignsMultipleOverlappingWindows() {
         // size=3s, slide=1s → 一记录落入 3 个窗口
         SlidingEventTimeWindows<Object> assigner = SlidingEventTimeWindows.of(
                 java.time.Duration.ofSeconds(3), java.time.Duration.ofSeconds(1));
@@ -31,8 +33,9 @@ class WindowAssignerTest {
         }
     }
 
+    /** TimeWindow 的 equals 由 start 和 end 决定。 */
     @Test
-    void TimeWindow的equals按start和end() {
+    void timeWindowEqualsByStartAndEnd() {
         assertEquals(new TimeWindow(1000, 2000), new TimeWindow(1000, 2000));
         assertNotEquals(new TimeWindow(1000, 2000), new TimeWindow(1000, 3000));
     }

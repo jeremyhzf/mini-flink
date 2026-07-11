@@ -27,8 +27,9 @@ class KeyedReduceParallelTest {
 
     record WC(String word, int count) { }
 
+    /** 验证多 subtask 并发下同一 key 的累加不分裂，per-key state 完整正确。 */
     @Test
-    void 多subtask并发下同key累加不分裂() throws Exception {
+    void sameKeyAccumulatesWithoutSplittingUnderMultiSubtaskConcurrency() throws Exception {
         StreamExecutionEnvironment env = new StreamExecutionEnvironment();
         CollectSink<WC> sink = new CollectSink<>();
 

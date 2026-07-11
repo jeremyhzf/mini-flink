@@ -34,13 +34,13 @@ public class CustomSourceSinkExample {
     public record SensorReading(String sensorId, double temperature) { }
 
     // ============================ 自定义 Source ============================
-
     /**
-     * 自定义数据源：模拟温度传感器，生成「每传感器 readingsPerSensor 条」读数。
+     * 自定义数据源：模拟温度传感器，生成「每个传感器 readingsPerSensor 条」读数。
      * 实现 {@link SourceFunction}，在 {@link #run(SourceContext)} 里通过 {@code ctx.collect} 发数据。
      * 多并行度下按 {@code idx % parallelism == subtaskIndex} 分片（演示 SourceContext 的并行位置）。
      */
     public static final class SensorSource implements SourceFunction<SensorReading> {
+        // 每个传感器多少条数据
         private final int readingsPerSensor;
 
         public SensorSource(int readingsPerSensor) {
@@ -67,7 +67,6 @@ public class CustomSourceSinkExample {
     }
 
     // ============================ 自定义 Sink ============================
-
     /**
      * 自定义输出端：消费到达的 {@link SensorReading}，温度 ≥ threshold 打印「告警」，否则打印「正常」。
      * 实现 {@link SinkFunction}，每条元素经 {@link #invoke(SensorReading)} 处理。
@@ -92,16 +91,22 @@ public class CustomSourceSinkExample {
         }
     }
 
-    // ============================ 作业装配 ============================
+    public static final class SensorReduce implements ReduceFunction<SensorReading> {
+        @Override
+        public SensorReading reduce(SensorReading a, SensorReading b) {
+            // per-sensor 最高温度（running）
+            return a.temperature() >= b.temperature() ? a : b;
+        }
+    }
 
+    // ============================ 作业装配 ============================
     public static void main(String[] args) throws Exception {
         StreamExecutionEnvironment env = new StreamExecutionEnvironment();
 
-        env.addSource(new SensorSource(3))                                       // 自定义 source
-           .keyBy((KeySelector<SensorReading, String>) r -> r.sensorId())        // 按 sensor 分区
-           .reduce((ReduceFunction<SensorReading>) (a, b) ->                     // per-sensor 最高温度（running）
-                   a.temperature() >= b.temperature() ? a : b)
-           .addSink(new AlertSink(26.0));                                        // 自定义 sink：≥26 告警
+        env.addSource(new SensorSource(3))                  // 自定义 source
+           .keyBy(SensorReading::sensorId)                                  // 按 sensor 分区
+           .reduce(new SensorReduce())                                      // per-sensor 最高温度（running）
+           .addSink(new AlertSink(26.0));                          // 自定义 sink：≥26 告警
 
         System.out.println("=== 自定义 Source（SensorSource）→ keyBy → reduce → 自定义 Sink（AlertSink）===");
         env.execute("custom-source-sink");

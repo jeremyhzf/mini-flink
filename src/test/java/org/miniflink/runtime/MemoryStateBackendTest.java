@@ -6,8 +6,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class MemoryStateBackendTest {
 
+    /** ValueState 按 currentKey 隔离存取：切 key 后互不影响，回到原 key 值仍在。 */
     @Test
-    void ValueState按currentKey隔离存取() {
+    void valueStateIsolatedByCurrentKey() {
         MemoryStateBackend backend = new MemoryStateBackend();
         ValueState<Integer> state = backend.getValueState("acc");
 
@@ -25,8 +26,9 @@ class MemoryStateBackendTest {
         assertEquals(1, state.value());
     }
 
+    /** ListState 按 currentKey 累加：同一 key 元素累加，新 key 为空列表。 */
     @Test
-    void ListState按key累加() {
+    void listStateAccumulatesByKey() {
         MemoryStateBackend backend = new MemoryStateBackend();
         ListState<String> state = backend.getListState("words");
 
@@ -38,8 +40,9 @@ class MemoryStateBackendTest {
         assertIterableEquals(java.util.List.of(), state.get());  // 新 key 无数据（空 list，Flink ListState 语义）
     }
 
+    /** MapState 按 currentKey 存键值，不同 key 之间相互隔离。 */
     @Test
-    void MapState按key存键值() {
+    void mapStateStoresByKey() {
         MemoryStateBackend backend = new MemoryStateBackend();
         MapState<String, Integer> state = backend.getMapState("counts");
 

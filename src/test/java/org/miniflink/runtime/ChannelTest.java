@@ -6,8 +6,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ChannelTest {
 
+    /** 验证 send 与 receive 按 FIFO 顺序传递元素（含 Record 与 EOB）。 */
     @Test
-    void send与receive应FIFO传递元素() throws Exception {
+    void sendAndReceiveTransferElementsInFifoOrder() throws Exception {
         Channel ch = new Channel(4);
         ch.send(new Record<>("a", 0L));
         ch.send(new Record<>("b", 0L));
@@ -18,8 +19,9 @@ class ChannelTest {
         assertInstanceOf(EndOfBroadcast.class, ch.receive());         // 第三个，FIFO（EOB）
     }
 
+    /** 验证通道容量满时 send 阻塞（反压）。 */
     @Test
-    void 容量满时send应阻塞() throws Exception {
+    void sendBlocksWhenChannelFull() throws Exception {
         Channel ch = new Channel(1); // 容量 1
         ch.send(new Record<>("x", 0L)); // 占满
         // 再 send 应阻塞；用另一个线程验证
@@ -32,8 +34,9 @@ class ChannelTest {
         blocker.interrupt();
     }
 
+    /** 验证空通道 receive 阻塞。 */
     @Test
-    void 空通道receive应阻塞() throws Exception {
+    void receiveBlocksOnEmptyChannel() throws Exception {
         Channel ch = new Channel(2);
         Thread[] holder = new Thread[1];
         holder[0] = new Thread(() -> {

@@ -43,9 +43,9 @@ class SourceContextCheckpointOffsetTest {
         return cap.emitted.get(cap.emitted.size() - 1)[1];
     }
 
-    /** 冷启（skipUntil=0）：上报 offset == emitted（max(emitted, 0)）。 */
+    /** 冷启（skipUntil=0）时 checkpoint 上报 offset 等于 emitted。 */
     @Test
-    void 冷启时checkpoint上报offset等于emitted() {
+    void coldStartCheckpointReportsOffsetEqualsEmitted() {
         ListCollector<String> out = new ListCollector<>();
         SourceContextImpl<String> ctx = new SourceContextImpl<>(out, 0, 1);
         CapturingEmitter cap = new CapturingEmitter();
@@ -59,9 +59,9 @@ class SourceContextCheckpointOffsetTest {
         assertEquals(List.of("a", "b", "c"), out.getResult());
     }
 
-    /** 恢复 skip 期（emitted<skipUntil）：上报绝对 offset == skipUntil，不是 0/1/2 相对值。 */
+    /** 恢复 skip 期（emitted<skipUntil）checkpoint 上报绝对 offset 等于 skipUntil。 */
     @Test
-    void 恢复skip期checkpoint上报绝对offset等于skipUntil() {
+    void restoreSkipPhaseReportsAbsoluteOffsetEqualsSkipUntil() {
         ListCollector<String> out = new ListCollector<>();
         SourceContextImpl<String> ctx = new SourceContextImpl<>(out, 0, 1);
         ctx.restoreOffset(5L);   // skipUntil=5, emitted=0
@@ -78,9 +78,9 @@ class SourceContextCheckpointOffsetTest {
         assertTrue(out.getResult().isEmpty(), "skip 期记录不应转发到下游");
     }
 
-    /** 越过 skip 后（emitted>=skipUntil）：上报 offset == emitted（max 取 emitted）。 */
+    /** 越过 skip 后（emitted>=skipUntil）checkpoint 上报 offset 等于 emitted。 */
     @Test
-    void 越过skip后checkpoint上报offset等于emitted() {
+    void afterSkipCheckpointReportsOffsetEqualsEmitted() {
         ListCollector<String> out = new ListCollector<>();
         SourceContextImpl<String> ctx = new SourceContextImpl<>(out, 0, 1);
         ctx.restoreOffset(5L);
@@ -103,7 +103,7 @@ class SourceContextCheckpointOffsetTest {
 
     /** drainPending 在 skip 期上报绝对 offset（与 collect 同坐标系）。 */
     @Test
-    void drainPending在skip期上报绝对offset() {
+    void drainPendingReportsAbsoluteOffsetInSkipPhase() {
         ListCollector<String> out = new ListCollector<>();
         SourceContextImpl<String> ctx = new SourceContextImpl<>(out, 0, 1);
         ctx.restoreOffset(5L);   // emitted=0, skipUntil=5
@@ -120,7 +120,7 @@ class SourceContextCheckpointOffsetTest {
 
     /** drainPending 在正常后（emitted>=skipUntil）上报 emitted。 */
     @Test
-    void drainPending在正常后上报emitted() {
+    void drainPendingReportsEmittedInNormalPhase() {
         ListCollector<String> out = new ListCollector<>();
         SourceContextImpl<String> ctx = new SourceContextImpl<>(out, 0, 1);
         CapturingEmitter cap = new CapturingEmitter();
@@ -141,7 +141,7 @@ class SourceContextCheckpointOffsetTest {
 
     /** 无 checkpoint 请求时 collect 不触发 emit（边界确认）。 */
     @Test
-    void 无checkpoint请求时collect不触发emit() {
+    void collectDoesNotEmitWithoutCheckpointRequest() {
         ListCollector<String> out = new ListCollector<>();
         SourceContextImpl<String> ctx = new SourceContextImpl<>(out, 0, 1);
         CapturingEmitter cap = new CapturingEmitter();

@@ -9,8 +9,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class SourceParallelismTest {
 
+    /** CollectionSource 应按 subtaskIndex 对数据分片，各 subtask 只取属于自己的索引。 */
     @Test
-    void CollectionSource应按subtaskIndex分片() throws Exception {
+    void collectionSourceShardsBySubtaskIndex() throws Exception {
         CollectionSource<Integer> src = new CollectionSource<>(List.of(10, 11, 12, 13, 14));
 
         ListCollector<Integer> out0 = new ListCollector<>();
@@ -22,8 +23,9 @@ class SourceParallelismTest {
         assertEquals(List.of(11, 13), out1.getResult());
     }
 
+    /** parallelism 为 1 时单个 subtask 取全部记录。 */
     @Test
-    void parallelism为1时取全部() throws Exception {
+    void parallelismOneEmitsAllRecords() throws Exception {
         CollectionSource<String> src = new CollectionSource<>(List.of("a", "b", "c"));
         ListCollector<String> out = new ListCollector<>();
         src.run(new SourceContextImpl<>(out, 0, 1));

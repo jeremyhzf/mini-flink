@@ -16,8 +16,9 @@ class EventTimeTriggerTest {
         @Override public void deleteEventTimeTimer(long time) { }
     }
 
+    /** onElement 注册 windowEnd 的 timer 并返回 CONTINUE。 */
     @Test
-    void onElement注册windowEnd的timer并返回CONTINUE() throws Exception {
+    void onElementRegistersWindowEndTimerAndReturnsContinue() throws Exception {
         EventTimeTrigger<String, TimeWindow> trigger = EventTimeTrigger.create();
         CapturingContext ctx = new CapturingContext();
         TimeWindow window = new TimeWindow(1000, 2000);
@@ -25,8 +26,9 @@ class EventTimeTriggerTest {
         assertEquals(List.of(2000L), ctx.registered);   // 注册 window.end
     }
 
+    /** onEventTime 在 windowEnd 时返回 FIRE_AND_PURGE，否则返回 CONTINUE。 */
     @Test
-    void onEventTime在windowEnd触发FIRE_AND_PURGE() throws Exception {
+    void onEventTimeAtWindowEndFiresAndPurges() throws Exception {
         EventTimeTrigger<String, TimeWindow> trigger = EventTimeTrigger.create();
         CapturingContext ctx = new CapturingContext();
         TimeWindow window = new TimeWindow(1000, 2000);

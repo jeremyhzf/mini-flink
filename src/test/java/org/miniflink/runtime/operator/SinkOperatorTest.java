@@ -12,8 +12,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class SinkOperatorTest {
 
+    /** 验证 sink 算子把每个元素交给 SinkFunction。 */
     @Test
-    void 应把每个元素交给SinkFunction() throws Exception {
+    void handsEachElementToSinkFunction() throws Exception {
         List<String> sinked = new ArrayList<>();
         SinkOperator<String> op = new SinkOperator<>((SinkFunction<String>) sinked::add);
         op.open(new ListCollector<>(), new RuntimeContextImpl(0, 1, null)); // sink 不输出，给一个占位 Collector

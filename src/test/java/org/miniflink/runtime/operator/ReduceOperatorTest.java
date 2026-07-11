@@ -12,8 +12,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ReduceOperatorTest {
 
+    /** 验证 reduce 算子按 key 分组累加并输出 running 结果。 */
     @Test
-    void 按key累加并输出running结果() throws Exception {
+    void accumulatesByKeyAndEmitsRunningResult() throws Exception {
         // keySelector: x -> x % 2（按奇偶分组）；reduce: 求和
         ReduceOperator<Integer> op = new ReduceOperator<>((ReduceFunction<Integer>) (a, b) -> a + b);
         KeySelector<Integer, Integer> ks = x -> x % 2;

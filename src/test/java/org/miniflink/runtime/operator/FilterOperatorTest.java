@@ -9,8 +9,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class FilterOperatorTest {
 
+    /** 验证 filter 算子仅转发满足过滤条件的元素到下游。 */
     @Test
-    void 仅转发满足过滤条件的元素() throws Exception {
+    void forwardsOnlyElementsMatchingFilter() throws Exception {
         FilterOperator<Integer> op = new FilterOperator<>((FilterFunction<Integer>) x -> x % 2 == 0);
         ListCollector<Integer> downstream = new ListCollector<>();
         op.open(downstream, new RuntimeContextImpl(0, 1, null));

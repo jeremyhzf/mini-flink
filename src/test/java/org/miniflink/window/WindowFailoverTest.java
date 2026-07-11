@@ -49,31 +49,9 @@ class WindowFailoverTest {
 
     // ============================ A. 确定性 WindowOperator restore-then-fire ============================
 
-    /**
-     * A：未触发窗口经 snapshot→restore 往返后，推进 watermark 仍触发输出最终累加值。
-     *
-     * <p>这是 window failover 的核心断言，确定性复刻生产恢复路径（OperatorTask.run 第 70-73 行）：
-     * open（空 backend 建句柄）→ backend.restore(keyedState) → chain.restoreState(operatorStates)。
-     *
-     * <p>WindowOperatorState 只含 timers + activeWindows 注册表；窗口累加值在 keyed state
-     * （MapState「window-accs」）中，须与算子状态分别持久化/恢复——本测试同时快照两者并还原到
-     * <b>全新</b>的 WindowOperator 实例（模拟恢复重建），断言恢复后 timer 能驱动窗口输出。
-     *
-     * <p>推演（TumblingEventTimeWindows.of(1s) + reduce 求和）：
-     * <ol>
-     *   <li>Event(a,1,100) + Event(a,2,200) → 窗口 [0,1000) 累加 = Event(a,3,200)，
-     *       注册 timer@1000；watermark 未推进 → <b>不触发</b>。</li>
-     *   <li>snapshot：WindowOperatorState(pendingTimers=[1000], windows=[(a,0,1000)]) +
-     *       keyedState（MapState「window-accs」[a][TimeWindow(0,1000)]=Event(a,3,200)）。</li>
-     *   <li>新建 WindowOperator 实例 → open → restore（backend + 算子状态）。
-     *       恢复后 pendingTimers=[1000] 已重灌、activeWindows 含 (a,[0,1000))；累加值随 backend 还原。
-     *       <b>恢复后未推进 watermark 前 collector 仍为空</b>（timer 在但未到点）。</li>
-     *   <li>onWatermark(1000) → timerService.advanceTo 触发 timer@1000 → onEventTime(1000) →
-     *       activeWindows.remove(1000) 命中 (a,[0,1000)) → state.get(window)=Event(a,3,200) → 输出。</li>
-     * </ol>
-     */
+    /** 未触发窗口经 snapshot→restore 往返后，推进 watermark 仍触发输出最终累加值。 */
     @Test
-    void 未触发窗口经快照恢复后推进watermark仍触发输出() throws Exception {
+    void unfiredWindowStillFiresAfterSnapshotRestoreAndWatermarkAdvance() throws Exception {
         // ---- 1) 构造 WindowOperator A，process 几条事件（窗口累加但未触发）----
         WindowOperator<Event> opA = new WindowOperator<>(
                 TumblingEventTimeWindows.<Event>of(Duration.ofSeconds(1)),
@@ -168,20 +146,10 @@ class WindowFailoverTest {
         }
     }
 
-    /**
-     * B：window 作业 failover——恢复后两窗口最终值均被输出。
-     *
-     * <p>拓扑：source(带 ts 事件) → map(identity + 第 N 条故障) → assignTimestampsAndWatermarks →
-     * keyBy → window(tumbling 1s) → reduce(求和) → sink；enableCheckpointing(短 interval) +
-     * setMaxRestarts。故障点落在窗口 [0,1s) 仍 pending 时（前段数据 ts < 1000，watermark < 1000）。
-     *
-     * <p>三重时序（window + checkpoint + failover）较脆，断言放宽为「两窗口均触发」：
-     * sink 结果中既含 ts<1000 的输出（窗口 [0,1s)），也含 ts>=1000 的输出（窗口 [1,2s)）——
-     * 即恢复后未触发窗口继续到点输出。@Timeout 防 flaky。
-     */
+    /** window 作业 failover 后，恢复重跑使两窗口最终值均被输出。 */
     @Test
     @Timeout(value = 30, unit = TimeUnit.SECONDS)
-    void window作业failover后两窗口最终值均输出() throws Exception {
+    void windowJobEmitsBothWindowFinalValuesAfterFailover() throws Exception {
         // 前段：窗口 [0,1000)，多条小 ts 事件（拉长存活供多 checkpoint 周期）；后段：窗口 [1000,2000)
         List<Event> data = new ArrayList<>();
         for (int i = 0; i < 8; i++) {

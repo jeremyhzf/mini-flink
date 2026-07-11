@@ -11,8 +11,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class WindowOperatorStateTest {
 
+    /** InternalTimerService 的 snapshotTimers 升序去重，restoreTimers 可还原。 */
     @Test
-    void internalTimerService快照与恢复() {
+    void internalTimerServiceSnapshotsAndRestores() {
         InternalTimerService s = new InternalTimerService();
         s.registerEventTimeTimer(100L);
         s.registerEventTimeTimer(300L);
@@ -26,8 +27,9 @@ class WindowOperatorStateTest {
         assertEquals(List.of(100L, 200L, 300L), r.snapshotTimers());
     }
 
+    /** WindowOperatorState 持有 pendingTimers 与 windows 注册表。 */
     @Test
-    void windowOperatorState持有timers与windows() {
+    void windowOperatorStateHoldsTimersAndWindows() {
         WindowOperatorState s = new WindowOperatorState(
                 List.of(500L),
                 List.of(new WindowOperatorState.WindowEntry("k1", 0L, 1000L)));
@@ -39,8 +41,9 @@ class WindowOperatorStateTest {
         assertEquals(1000L, e.end());
     }
 
+    /** WindowOperatorState 可序列化往返不丢失 timers 与 windows 数据。 */
     @Test
-    void windowOperatorState可序列化往返不丢数据() throws Exception {
+    void windowOperatorStateSurvivesSerializationRoundTrip() throws Exception {
         // OperatorState extends Serializable —— WindowEntry 须可序列化，否则 checkpoint 持久化抛 NotSerializableException
         WindowOperatorState s = new WindowOperatorState(
                 List.of(500L, 1000L),

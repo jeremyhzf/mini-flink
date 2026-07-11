@@ -14,8 +14,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 class TextProcessingExampleTest {
 
+    /** 验证文本处理流水线（分词→过滤短词→转大写）产出预期结果。 */
     @Test
-    void 文本处理流水线应产出预期结果() throws Exception {
+    void textProcessingPipelineProducesExpectedResult() throws Exception {
         StreamExecutionEnvironment env = new StreamExecutionEnvironment();
         CollectSink<String> sink = new CollectSink<>();
 

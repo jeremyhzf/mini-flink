@@ -12,8 +12,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class KeyedStreamTest {
 
+    /** keyBy 返回 KeyedStream，其后的 reduce 构建 hash 分区、携带 keySelector 的 transformation。 */
     @Test
-    void keyBy返回KeyedStream且reduce建hash分区transformation() {
+    void keyByThenReduceBuildsHashPartitionedTransformation() {
         StreamExecutionEnvironment env = new StreamExecutionEnvironment();
         KeyedStream<Integer, Integer> keyed = env.fromCollection(List.of(1, 2, 3))
                 .keyBy((KeySelector<Integer, Integer>) x -> x);

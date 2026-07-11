@@ -6,14 +6,16 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class WatermarkFlowTest {
 
+    /** 验证 Watermark 携带 timestamp。 */
     @Test
-    void Watermark携带timestamp() {
+    void watermarkHoldsTimestamp() {
         Watermark wm = new Watermark(123L);
         assertEquals(123L, wm.getTimestamp());
     }
 
+    /** 验证 Output 的 sendWatermark 将 Watermark 广播到所有下游 channel。 */
     @Test
-    void Output的sendWatermark广播到所有下游channel() throws Exception {
+    void sendWatermarkBroadcastsToAllDownstreamChannels() throws Exception {
         Channel c1 = new Channel();
         Channel c2 = new Channel();
         Output output = new Output(List.of(c1, c2), new org.miniflink.execution.ForwardPartitioner(), null);
