@@ -1,5 +1,6 @@
 package org.miniflink.time;
 
+import java.util.List;
 import java.util.TreeSet;
 
 /** event time 定时器实现：TreeSet 按 time 去重排序，advanceTo 触发所有 time<=watermark 的 timer。 */
@@ -29,5 +30,16 @@ public class InternalTimerService implements TimerService {
             long time = eventTimeTimers.pollFirst();
             handler.onEventTime(time);
         }
+    }
+
+    /** 快照：返回升序去重的 timer 列表（副本）。 */
+    public List<Long> snapshotTimers() {
+        return new java.util.ArrayList<>(eventTimeTimers);
+    }
+
+    /** 恢复：清空后重灌 timers。 */
+    public void restoreTimers(java.util.Collection<Long> timers) {
+        eventTimeTimers.clear();
+        eventTimeTimers.addAll(timers);
     }
 }

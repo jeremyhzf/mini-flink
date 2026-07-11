@@ -5,8 +5,10 @@ import org.miniflink.api.function.ReduceFunction;
 import org.miniflink.runtime.Collector;
 import org.miniflink.runtime.MapState;
 import org.miniflink.runtime.Operator;
+import org.miniflink.runtime.OperatorState;
 import org.miniflink.runtime.RuntimeContext;
 import org.miniflink.runtime.Watermark;
+import org.miniflink.runtime.checkpoint.WindowOperatorState;
 import org.miniflink.time.InternalTimerService;
 import org.miniflink.time.TimerHandler;
 import org.miniflink.window.EventTimeTrigger;
@@ -145,5 +147,28 @@ public class WindowOperator<IN> implements Operator<IN, IN>, TimerHandler {
     @Override
     public WindowOperator<IN> copy() {
         return new WindowOperator<>(windowAssigner, reduceFn);   // 共享无状态 assigner/reduceFn
+    }
+
+    @Override
+    public java.util.Optional<OperatorState> snapshotState() {
+        java.util.List<Long> timers = timerService.snapshotTimers();
+        java.util.List<WindowOperatorState.WindowEntry> wins = new java.util.ArrayList<>();
+        for (List<KeyedWindow> list : activeWindows.values()) {
+            for (KeyedWindow kw : list) {
+                wins.add(new WindowOperatorState.WindowEntry(kw.key(), kw.window().start(), kw.window().end()));
+            }
+        }
+        return java.util.Optional.of(new WindowOperatorState(timers, wins));
+    }
+
+    @Override
+    public void restoreState(OperatorState state) {
+        WindowOperatorState s = (WindowOperatorState) state;
+        timerService.restoreTimers(s.getPendingTimers());
+        activeWindows.clear();
+        for (WindowOperatorState.WindowEntry e : s.getWindows()) {
+            TimeWindow w = new TimeWindow(e.start(), e.end());
+            activeWindows.computeIfAbsent(w.end(), k -> new ArrayList<>()).add(new KeyedWindow(e.key(), w));
+        }
     }
 }

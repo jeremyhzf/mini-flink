@@ -48,4 +48,24 @@ public class OperatorChain<IN, OUT> {
             ((Operator) op).onWatermark(watermark);
         }
     }
+
+    /** 收集链内各算子的快照（按算子索引）。 */
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public java.util.Map<Integer, OperatorState> snapshotState() {
+        java.util.Map<Integer, OperatorState> states = new java.util.LinkedHashMap<>();
+        for (int i = 0; i < operators.size(); i++) {
+            int idx = i;   // lambda 需 effectively final
+            java.util.Optional<OperatorState> s = ((Operator) operators.get(i)).snapshotState();
+            s.ifPresent(st -> states.put(idx, st));
+        }
+        return states;
+    }
+
+    /** 按算子索引恢复链内算子状态。 */
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public void restoreState(java.util.Map<Integer, OperatorState> states) {
+        for (var e : states.entrySet()) {
+            ((Operator) operators.get(e.getKey())).restoreState(e.getValue());
+        }
+    }
 }

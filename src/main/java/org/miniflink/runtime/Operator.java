@@ -17,4 +17,12 @@ public interface Operator<IN, OUT> {
      * （如 out 收集器）若被多 subtask 共享会相互踩踏导致丢数据/重复。
      */
     Operator<IN, OUT> copy();
+
+    /** 算子级快照（无额外状态的算子返回 empty）。 */
+    default java.util.Optional<OperatorState> snapshotState() {
+        return java.util.Optional.empty();
+    }
+
+    /** 从快照恢复算子级状态（无额外状态的算子空实现）。 */
+    default void restoreState(OperatorState state) { }
 }
