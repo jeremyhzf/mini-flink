@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -63,7 +64,7 @@ public class StreamExecutor {
 
         // 3. 启动所有线程：任一 Task 未捕获异常 → 记录 cause 并中断其余（失败关闭），
         //    解除其他 Task 在 Channel.receive()/send() 上的阻塞，避免 join 永等。
-        List<Thread> threads = new ArrayList<>();
+        List<Thread> threads = new CopyOnWriteArrayList<>();
         AtomicReference<Throwable> error = new AtomicReference<>();
         for (Task t : tasks) {
             Thread th = new Thread(t, "miniflink-task-" + threads.size());
