@@ -319,13 +319,13 @@ last = Coordinator.lastCompletedCheckpoint()
 
 | # | 任务 |
 |---|---|
-| 7 | `StateBackend.snapshot/restore` + `StateSnapshot` + 单测 |
-| 8 | `SourceContext` offset（emitted/skipUntil/snapshot/restore）+ `fromCollection` 转 List + `CollectionSource` 持 List + 单测 |
-| 9 | `Operator` 算子级快照钩子 + `OperatorChain.snapshotState/restoreState` + `WindowOperatorState` + `WindowOperator` snapshot/restore + 单测 |
-| 10 | `SubtaskSnapshot` + `Checkpoint` + `OperatorTask.snapshot/restore` 整合 + 单测 |
-| 11 | `CheckpointCoordinator`（周期 daemon + trigger source + ack 汇聚 + retained + stop）+ 单测 |
-| 12 | 自动 failover 循环（StreamExecutor 重构 maxRestarts + 从 checkpoint 重启重建）+ 单测 |
-| 13 | Phase 2 端到端：周期 checkpoint + failover exactly-once（keyed reduce + window）+ 文档 |
+| 7 | `StateBackend.snapshot/restore` + `StateSnapshot` + 单测（已完成） |
+| 8 | `SourceContext` offset（emitted/skipUntil/snapshot/restore）+ `fromCollection` 转 List + `CollectionSource` 持 List + 单测（已完成） |
+| 9 | `Operator` 算子级快照钩子 + `OperatorChain.snapshotState/restoreState` + `WindowOperatorState` + `WindowOperator` snapshot/restore + 单测（已完成） |
+| 10 | `SubtaskSnapshot` + `Checkpoint` + `OperatorTask.snapshot/restore` 整合 + 单测（已完成） |
+| 11 | `CheckpointCoordinator`（周期 daemon + trigger source + ack 汇聚 + retained + stop）+ 单测（已完成） |
+| 12 | 自动 failover 循环（StreamExecutor 重构 maxRestarts + 从 checkpoint 重启重建）+ 单测（已完成） |
+| 13 | Phase 2 端到端：周期 checkpoint + failover exactly-once（keyed reduce + window）+ 文档（已完成） |
 | 14 | 可运行示例 `CheckpointExample`（演示周期 checkpoint + 故障恢复）+ 文档 |
 
 ## 10. 风险与权衡
