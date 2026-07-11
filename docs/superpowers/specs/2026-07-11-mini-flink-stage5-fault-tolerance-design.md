@@ -308,12 +308,12 @@ last = Coordinator.lastCompletedCheckpoint()
 
 | # | 任务 |
 |---|---|
-| 1 | `Barrier` + `StreamElement` 扩展 + `Output.sendBarrier` + 单测 |
-| 2 | `InputChannel` + `InputGate`（per-upstream 对齐算法 + SnapshotCallback 占位）+ 单测 |
-| 3 | `StreamExecutor` Channel 分配改 per-pair + 建 InputGate + `OperatorTask.input` 改 InputGate + 阶段②全量回归 |
-| 4 | `OperatorTask` barrier 对齐回调（task 不感知 barrier，InputGate 回调 snapshot 占位）+ 单测 |
-| 5 | 失败关闭（StreamExecutor interrupt 全部 + 不挂起 + 超时兜底）+ 单测 |
-| 6 | Phase 1 端到端：多并行 barrier 对齐流动（snapshot 占位）+ 文档 |
+| 1 | `Barrier` + `StreamElement` 扩展 + `Output.sendBarrier` + 单测（已完成） |
+| 2 | `InputChannel` + `InputGate`（per-upstream 对齐算法 + SnapshotCallback 占位）+ 单测（已完成） |
+| 3 | `StreamExecutor` Channel 分配改 per-pair + 建 InputGate + `OperatorTask.input` 改 InputGate + 阶段②全量回归（已完成） |
+| 4 | `OperatorTask` barrier 对齐回调（task 不感知 barrier，InputGate 回调 snapshot 占位）+ 单测（已完成） |
+| 5 | 失败关闭（StreamExecutor interrupt 全部 + 不挂起 + 超时兜底）+ 单测（已完成） |
+| 6 | Phase 1 端到端：多并行 barrier 对齐流动（snapshot 占位）+ 文档（已完成） |
 
 **Phase 2（checkpoint 与恢复）**：
 

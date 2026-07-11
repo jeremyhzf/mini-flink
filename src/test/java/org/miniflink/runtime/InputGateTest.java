@@ -3,8 +3,11 @@ package org.miniflink.runtime;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -93,6 +96,65 @@ class InputGateTest {
         // 第 3、4 次：两个 EOB（关键是不死锁：测试在 @Timeout(10) 内正常结束）
         assertEquals(EndOfBroadcast.INSTANCE, gate.receive());
         assertEquals(EndOfBroadcast.INSTANCE, gate.receive());
+        assertNull(gate.pollNonBlocking());
+    }
+
+    /**
+     * 多轮 checkpoint 对齐验收：第 1 轮对齐 + reset 后，第 2 轮 barrier 仍正确对齐。
+     * 验证 aligningId 重置 + 各 channel resetAlignment 后多轮语义不退化（Phase 2 周期 coordinator 反复触发 barrier 的前置依赖）。
+     *
+     * 数据（两 channel 对称，每轮两 barrier 几乎同时到达，专注轮间 reset 正确性而非缓冲路径——
+     * 缓冲路径已由 partialAlignmentBuffersEarlyChannelRecordWithoutDeadlock 覆盖）：
+     *   a = [Record("a1"), Barrier(1), Record("a2"), Barrier(2), EOB]
+     *   b = [Record("b1"), Barrier(1), Record("b2"), Barrier(2), EOB]
+     *
+     * 推演（aligningId<0 才排空缓冲的门控下）：
+     *   receive#1 → a1, #2 → b1（aligningId<0 放行）
+     *   #3 内部：a.poll=Barrier(1)→a 对齐、aligningId=1、未全齐；
+     *           b.poll=Barrier(1)→全齐→onAligned(1)+forward Barrier(1)+aligningId=-1+reset；
+     *           a.poll=a2 放行 → 返回 a2
+     *   #4 → b2
+     *   #5 内部：同理对齐 Barrier(2)→onAligned(2)+forward Barrier(2)+reset；a.poll=EOB → 返回 EOB
+     *   #6 → b 的 EOB
+     * 故 alignedIds=[1,2]、forwarded=[Barrier(1),Barrier(2)]、4 条 record 全放行。
+     */
+    @Test
+    @Timeout(10)
+    void multipleConsecutiveAlignmentRoundsResetCorrectly() throws Exception {
+        List<Long> alignedIds = new ArrayList<>();
+        List<Barrier> forwarded = new ArrayList<>();
+        InputChannel a = feed(new Record<>("a1", 0), new Barrier(1L), new Record<>("a2", 0),
+                new Barrier(2L), EndOfBroadcast.INSTANCE);
+        InputChannel b = feed(new Record<>("b1", 0), new Barrier(1L), new Record<>("b2", 0),
+                new Barrier(2L), EndOfBroadcast.INSTANCE);
+        InputGate gate = new InputGate(List.of(a, b), id -> alignedIds.add(id), forwarded::add);
+
+        List<Object> emitted = new ArrayList<>();
+        int eobSeen = 0;
+        // 每个 channel 末尾一个 EOB，收齐 2 个即表示两 channel 数据全消费完
+        while (eobSeen < 2) {
+            Object e = gate.receive();
+            if (e instanceof EndOfBroadcast) {
+                eobSeen++;
+            } else {
+                emitted.add(e);
+            }
+        }
+
+        // 两轮对齐：onAligned 以 id=1 和 id=2 各触发一次（轮间 reset 后第 2 轮仍正确对齐）
+        assertEquals(List.of(1L, 2L), alignedIds);
+        // 两个 barrier 都转发到下游
+        assertEquals(2, forwarded.size());
+        assertEquals(1L, forwarded.get(0).getCheckpointId());
+        assertEquals(2L, forwarded.get(1).getCheckpointId());
+        // 4 条 record 全部经 receive() 放行（不丢、不被 barrier 消费误吞）
+        Set<String> values = new HashSet<>();
+        for (Object r : emitted) {
+            assertInstanceOf(Record.class, r);
+            values.add((String) ((Record<?>) r).value());
+        }
+        assertEquals(Set.of("a1", "b1", "a2", "b2"), values);
+        // 全部消费完毕，无残留
         assertNull(gate.pollNonBlocking());
     }
 }
