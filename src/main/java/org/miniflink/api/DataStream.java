@@ -74,7 +74,7 @@ public class DataStream<T> {
 
     /** 供 KeyedStream 使用：建一个带指定分区器与 keySelector 的 transformation。 */
     <O> DataStream<O> keyedTransform(String name, Operator<T, O> operator,
-                                     org.miniflink.execution.Partitioner partitioner,
+                                     Partitioner partitioner,
                                      KeySelector<T, ?> keySelector) {
         OneInputTransformation<T, O> tx = new OneInputTransformation<>(
                 env.getNewNodeId(), name, transformation, operator, partitioner, keySelector);

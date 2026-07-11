@@ -3,7 +3,6 @@ package org.miniflink.api;
 import org.miniflink.api.function.KeySelector;
 import org.miniflink.api.function.ReduceFunction;
 import org.miniflink.execution.HashPartitioner;
-import org.miniflink.runtime.Operator;
 import org.miniflink.runtime.operator.ReduceOperator;
 
 /**

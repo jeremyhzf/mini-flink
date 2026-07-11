@@ -31,7 +31,6 @@ public class ReduceOperator<IN> implements Operator<IN, IN> {
         this.keySelector = (KeySelector<IN, ?>) ctx.getKeySelector();
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
     public void processElement(IN record) throws Exception {
         Object key = keySelector.getKey(record);
