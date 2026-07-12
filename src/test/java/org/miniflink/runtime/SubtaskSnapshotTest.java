@@ -2,8 +2,8 @@ package org.miniflink.runtime;
 
 import org.junit.jupiter.api.Test;
 import org.miniflink.api.function.MapFunction;
+import org.miniflink.checkpoint.SubtaskSnapshot;
 import org.miniflink.runtime.operator.MapOperator;
-import org.miniflink.state.ValueState;
 
 import java.util.List;
 

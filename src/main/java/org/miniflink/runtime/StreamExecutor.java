@@ -4,6 +4,8 @@ import org.miniflink.execution.ExecutionEdge;
 import org.miniflink.execution.ExecutionGraph;
 import org.miniflink.execution.ExecutionVertex;
 import org.miniflink.execution.ForwardPartitioner;
+import org.miniflink.checkpoint.Checkpoint;
+import org.miniflink.checkpoint.SubtaskSnapshot;
 
 import java.util.ArrayList;
 import java.util.Arrays;

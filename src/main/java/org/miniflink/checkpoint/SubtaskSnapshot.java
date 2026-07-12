@@ -1,4 +1,4 @@
-package org.miniflink.runtime;
+package org.miniflink.checkpoint;
 
 import java.io.Serializable;
 import java.util.Map;

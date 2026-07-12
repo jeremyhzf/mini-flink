@@ -1,7 +1,6 @@
-package org.miniflink.runtime.checkpoint;
+package org.miniflink.checkpoint;
 
 import org.junit.jupiter.api.Test;
-import org.miniflink.state.OperatorState;
 import org.miniflink.time.InternalTimerService;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

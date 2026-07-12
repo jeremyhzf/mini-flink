@@ -12,7 +12,7 @@ import org.miniflink.runtime.ListCollector;
 import org.miniflink.runtime.RuntimeContextImpl;
 import org.miniflink.runtime.SourceContext;
 import org.miniflink.runtime.Watermark;
-import org.miniflink.runtime.checkpoint.WindowOperatorState;
+import org.miniflink.checkpoint.WindowOperatorState;
 import org.miniflink.runtime.operator.WindowOperator;
 import org.miniflink.state.StateSnapshot;
 import org.miniflink.time.WatermarkStrategy;

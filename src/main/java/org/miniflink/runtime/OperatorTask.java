@@ -2,6 +2,7 @@ package org.miniflink.runtime;
 
 import java.util.List;
 import java.util.Map;
+import org.miniflink.checkpoint.SubtaskSnapshot;
 import org.miniflink.state.OperatorState;
 import org.miniflink.state.StateSnapshot;
 

@@ -1,6 +1,8 @@
 package org.miniflink.runtime;
 
 import org.junit.jupiter.api.Test;
+import org.miniflink.checkpoint.Checkpoint;
+import org.miniflink.checkpoint.SubtaskSnapshot;
 import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 

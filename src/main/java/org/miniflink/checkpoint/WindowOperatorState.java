@@ -1,4 +1,4 @@
-package org.miniflink.runtime.checkpoint;
+package org.miniflink.checkpoint;
 
 import org.miniflink.state.OperatorState;
 import java.io.Serializable;

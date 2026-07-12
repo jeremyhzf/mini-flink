@@ -3,6 +3,8 @@ package org.miniflink.runtime;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicLong;
+import org.miniflink.checkpoint.Checkpoint;
+import org.miniflink.checkpoint.SubtaskSnapshot;
 
 /**
  * checkpoint 协调器：daemon 线程按 interval 周期触发（向 source 置标志）；各 subtask ack 汇聚；

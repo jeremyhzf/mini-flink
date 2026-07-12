@@ -8,7 +8,7 @@ import org.miniflink.runtime.Operator;
 import org.miniflink.state.OperatorState;
 import org.miniflink.runtime.RuntimeContext;
 import org.miniflink.runtime.Watermark;
-import org.miniflink.runtime.checkpoint.WindowOperatorState;
+import org.miniflink.checkpoint.WindowOperatorState;
 import org.miniflink.time.InternalTimerService;
 import org.miniflink.time.TimerHandler;
 import org.miniflink.window.EventTimeTrigger;
