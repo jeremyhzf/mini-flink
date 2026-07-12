@@ -62,7 +62,9 @@ public class Output {
     /** 向所有下游 channel 广播 watermark（watermark 不分区；跳过 forward per-pair 占位 null）。 */
     public void sendWatermark(Watermark wm) {
         for (Channel c : downstreamChannels) {
-            if (c == null) continue;            // forward per-pair 占位
+            if (c == null) {
+                continue;            // forward per-pair 占位
+            }
             try {
                 c.send(wm);
             } catch (InterruptedException e) {
@@ -75,7 +77,9 @@ public class Output {
     /** 向所有下游 channel 广播 barrier（对齐用，不分区；跳过 forward per-pair 占位 null）。 */
     public void sendBarrier(Barrier barrier) {
         for (Channel c : downstreamChannels) {
-            if (c == null) continue;            // forward per-pair 占位
+            if (c == null) {
+                continue;            // forward per-pair 占位
+            }
             try {
                 c.send(barrier);
             } catch (InterruptedException e) {

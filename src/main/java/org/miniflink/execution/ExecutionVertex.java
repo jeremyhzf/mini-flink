@@ -4,6 +4,7 @@ import org.miniflink.runtime.Operator;
 import org.miniflink.runtime.SourceOperator;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * 物理执行计划的 subtask。
@@ -48,5 +49,22 @@ public class ExecutionVertex {
 
     public SourceOperator<?> getSourceOperator() {
         return sourceOperator;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        ExecutionVertex that = (ExecutionVertex) o;
+        return id == that.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }

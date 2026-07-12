@@ -32,7 +32,9 @@ public class CheckpointCoordinator {
     }
 
     public void start() {
-        if (intervalMillis == Long.MAX_VALUE) return;   // 未启用 checkpoint（测试/单次）
+        if (intervalMillis == Long.MAX_VALUE) {
+            return;   // 未启用 checkpoint（测试/单次）
+        }
         running = true;
         daemon = new Thread(this::loop, "miniflink-checkpoint");
         daemon.setDaemon(true);

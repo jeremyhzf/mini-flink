@@ -68,17 +68,19 @@ public class MemoryStateBackend implements StateBackend {
     @Override
     public void restore(StateSnapshot s) {
         this.valueStore.clear();
-        for (var e : copyVV(s.getValueStore()).entrySet()) valueStore.put(e.getKey(), e.getValue());
+        valueStore.putAll(copyVV(s.getValueStore()));
         this.listStore.clear();
-        for (var e : copyVL(s.getListStore()).entrySet()) listStore.put(e.getKey(), e.getValue());
+        listStore.putAll(copyVL(s.getListStore()));
         this.mapStore.clear();
-        for (var e : copyVM(s.getMapStore()).entrySet()) mapStore.put(e.getKey(), e.getValue());
+        mapStore.putAll(copyVM(s.getMapStore()));
         this.currentKey = null;
     }
 
     private static Map<String, Map<Object, Object>> copyVV(Map<String, Map<Object, Object>> src) {
         Map<String, Map<Object, Object>> dst = new HashMap<>();
-        for (var e : src.entrySet()) dst.put(e.getKey(), new HashMap<>(e.getValue()));
+        for (var e : src.entrySet()) {
+            dst.put(e.getKey(), new HashMap<>(e.getValue()));
+        }
         return dst;
     }
 
@@ -86,7 +88,9 @@ public class MemoryStateBackend implements StateBackend {
         Map<String, Map<Object, List<Object>>> dst = new HashMap<>();
         for (var e : src.entrySet()) {
             Map<Object, List<Object>> inner = new HashMap<>();
-            for (var ie : e.getValue().entrySet()) inner.put(ie.getKey(), new ArrayList<>(ie.getValue()));
+            for (var ie : e.getValue().entrySet()) {
+                inner.put(ie.getKey(), new ArrayList<>(ie.getValue()));
+            }
             dst.put(e.getKey(), inner);
         }
         return dst;
@@ -96,7 +100,9 @@ public class MemoryStateBackend implements StateBackend {
         Map<String, Map<Object, Map<Object, Object>>> dst = new HashMap<>();
         for (var e : src.entrySet()) {
             Map<Object, Map<Object, Object>> inner = new HashMap<>();
-            for (var ie : e.getValue().entrySet()) inner.put(ie.getKey(), new HashMap<>(ie.getValue()));
+            for (var ie : e.getValue().entrySet()) {
+                inner.put(ie.getKey(), new HashMap<>(ie.getValue()));
+            }
             dst.put(e.getKey(), inner);
         }
         return dst;

@@ -14,8 +14,12 @@ public final class Barrier implements StreamElement {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Barrier that)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof Barrier that)) {
+            return false;
+        }
         return checkpointId == that.checkpointId;
     }
 

@@ -63,12 +63,16 @@ public class InputGate {
         if (aligningId < 0) {
             for (InputChannel c : channels) {
                 StreamElement b = c.pollBuffered();
-                if (b != null) return b;
+                if (b != null) {
+                    return b;
+                }
             }
         }
         for (InputChannel c : channels) {
             StreamElement e = c.poll();
-            if (e != null) return e;
+            if (e != null) {
+                return e;
+            }
         }
         return null;
     }

@@ -17,8 +17,12 @@ public class TimeWindow extends Window {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof TimeWindow that)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof TimeWindow that)) {
+            return false;
+        }
         return start == that.start && end == that.end;
     }
 
