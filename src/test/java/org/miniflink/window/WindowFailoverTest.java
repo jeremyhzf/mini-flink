@@ -14,7 +14,7 @@ import org.miniflink.runtime.SourceContext;
 import org.miniflink.runtime.Watermark;
 import org.miniflink.runtime.checkpoint.WindowOperatorState;
 import org.miniflink.runtime.operator.WindowOperator;
-import org.miniflink.runtime.StateSnapshot;
+import org.miniflink.state.StateSnapshot;
 import org.miniflink.time.WatermarkStrategy;
 
 import java.time.Duration;

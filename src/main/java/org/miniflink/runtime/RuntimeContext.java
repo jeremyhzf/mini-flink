@@ -1,6 +1,7 @@
 package org.miniflink.runtime;
 
 import org.miniflink.api.function.KeySelector;
+import org.miniflink.state.StateBackend;
 
 /** 算子运行时上下文（per-subtask）：并行位置 + keyed state + currentKey + 当前记录的事件时间戳。 */
 public interface RuntimeContext {

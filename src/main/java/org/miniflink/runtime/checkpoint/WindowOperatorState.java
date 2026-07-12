@@ -1,6 +1,6 @@
 package org.miniflink.runtime.checkpoint;
 
-import org.miniflink.runtime.OperatorState;
+import org.miniflink.state.OperatorState;
 import java.io.Serializable;
 import java.util.List;
 

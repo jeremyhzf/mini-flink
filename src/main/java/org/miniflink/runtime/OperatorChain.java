@@ -2,6 +2,7 @@ package org.miniflink.runtime;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.miniflink.state.OperatorState;
 
 /**
  * 一个 Task 内链化的算子序列 [op1(IN→?), op2, ..., opN(?→OUT)]。

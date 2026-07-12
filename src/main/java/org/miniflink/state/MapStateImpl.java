@@ -1,4 +1,4 @@
-package org.miniflink.runtime;
+package org.miniflink.state;
 
 import java.util.Map;
 

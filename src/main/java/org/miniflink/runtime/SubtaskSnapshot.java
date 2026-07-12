@@ -2,6 +2,8 @@ package org.miniflink.runtime;
 
 import java.io.Serializable;
 import java.util.Map;
+import org.miniflink.state.OperatorState;
+import org.miniflink.state.StateSnapshot;
 
 /** 单 subtask 的快照：keyed state + source offset + 算子级状态。 */
 public class SubtaskSnapshot implements Serializable {

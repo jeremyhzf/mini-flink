@@ -1,4 +1,4 @@
-package org.miniflink.runtime;
+package org.miniflink.state;
 /** 列表状态（绑定当前 key）。 */
 public interface ListState<T> {
     Iterable<T> get();

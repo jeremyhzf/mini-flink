@@ -1,4 +1,4 @@
-package org.miniflink.runtime;
+package org.miniflink.state;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;

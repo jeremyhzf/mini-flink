@@ -1,4 +1,4 @@
-package org.miniflink.runtime;
+package org.miniflink.state;
 
 /** 状态后端：创建 keyed state 句柄；currentKey 由 RuntimeContext 设置。 */
 public interface StateBackend {

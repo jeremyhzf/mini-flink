@@ -1,4 +1,4 @@
-package org.miniflink.runtime;
+package org.miniflink.state;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,7 +20,7 @@ public class MemoryStateBackend implements StateBackend {
         this.currentKey = key;
     }
 
-    Object currentKey() {
+    public Object currentKey() {
         return currentKey;
     }
 

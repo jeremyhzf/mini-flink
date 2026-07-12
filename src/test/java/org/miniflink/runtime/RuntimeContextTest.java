@@ -2,6 +2,7 @@ package org.miniflink.runtime;
 
 import org.junit.jupiter.api.Test;
 import org.miniflink.api.function.KeySelector;
+import org.miniflink.state.ValueState;
 
 import static org.junit.jupiter.api.Assertions.*;
 

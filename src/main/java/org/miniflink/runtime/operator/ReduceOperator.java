@@ -5,7 +5,7 @@ import org.miniflink.api.function.ReduceFunction;
 import org.miniflink.runtime.Collector;
 import org.miniflink.runtime.Operator;
 import org.miniflink.runtime.RuntimeContext;
-import org.miniflink.runtime.ValueState;
+import org.miniflink.state.ValueState;
 
 /**
  * keyed 聚合算子：open 时从 RuntimeContext 取 ValueState（累加器）；

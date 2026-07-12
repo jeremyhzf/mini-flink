@@ -1,4 +1,4 @@
-package org.miniflink.runtime;
+package org.miniflink.state;
 import java.util.Map;
 /** 映射状态（绑定当前 key）。 */
 public interface MapState<K, V> {

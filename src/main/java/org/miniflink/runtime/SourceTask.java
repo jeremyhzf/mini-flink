@@ -3,6 +3,7 @@ package org.miniflink.runtime;
 import java.util.List;
 import java.util.Map;
 import org.miniflink.runtime.operator.SourceOperatorImpl;
+import org.miniflink.state.StateSnapshot;
 
 /** source 执行单元：open source（注入 RuntimeContext）→ run → 正常结束广播 EOB。 */
 public class SourceTask implements Task {

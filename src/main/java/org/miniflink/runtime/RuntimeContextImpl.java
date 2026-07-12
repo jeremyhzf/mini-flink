@@ -2,6 +2,8 @@ package org.miniflink.runtime;
 
 import java.util.function.Consumer;
 import org.miniflink.api.function.KeySelector;
+import org.miniflink.state.StateBackend;
+import org.miniflink.state.MemoryStateBackend;
 
 /** RuntimeContext 默认实现：内置 MemoryStateBackend，持有 currentKey 与 currentTimestamp。 */
 public class RuntimeContextImpl implements RuntimeContext {

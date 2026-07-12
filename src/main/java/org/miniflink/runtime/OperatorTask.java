@@ -2,6 +2,8 @@ package org.miniflink.runtime;
 
 import java.util.List;
 import java.util.Map;
+import org.miniflink.state.OperatorState;
+import org.miniflink.state.StateSnapshot;
 
 /** 处理算子执行单元：open chain → 循环读 InputGate → Record 经 chain 处理 → EOB 计数；归零广播 EOB。 */
 public class OperatorTask implements Task {
