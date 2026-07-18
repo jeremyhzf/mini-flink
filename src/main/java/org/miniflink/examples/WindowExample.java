@@ -1,8 +1,6 @@
 package org.miniflink.examples;
 
 import org.miniflink.api.StreamExecutionEnvironment;
-import org.miniflink.api.function.KeySelector;
-import org.miniflink.api.function.ReduceFunction;
 import org.miniflink.connector.CollectSink;
 import org.miniflink.time.WatermarkStrategy;
 import org.miniflink.window.TumblingEventTimeWindows;
@@ -42,10 +40,10 @@ public class WindowExample {
 
         env.fromCollection(events)
            .assignTimestampsAndWatermarks(
-                   WatermarkStrategy.<Event>forBoundedOutOfOrderness(Duration.ofMillis(0), e -> e.ts))
-           .keyBy((KeySelector<Event, String>) e -> e.key)
+                   WatermarkStrategy.forBoundedOutOfOrderness(Duration.ofMillis(0), e -> e.ts))
+           .keyBy(e -> e.key)
            .window(TumblingEventTimeWindows.of(Duration.ofSeconds(1)))
-           .reduce((ReduceFunction<Event>) (a, b) -> new Event(a.key, a.value + b.value, b.ts))
+           .reduce((a, b) -> new Event(a.key, a.value + b.value, b.ts))
            .addSink(sink::add);
 
         env.execute("window-example");

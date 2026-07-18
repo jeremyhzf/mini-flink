@@ -9,21 +9,27 @@ import org.miniflink.graph.Transformation;
 import org.miniflink.runtime.StreamExecutor;
 import org.miniflink.runtime.operator.SourceOperatorImpl;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /** 作业入口：构建 DAG 并触发执行。 */
 public class StreamExecutionEnvironment {
+    /** 生成唯一 ID。 */
     private final AtomicInteger idCounter = new AtomicInteger(0);
+    /** 逻辑图：逻辑图：收集所有 transformation 与 sink 节点。 */
     private final StreamGraph streamGraph = new StreamGraph();
-    private long checkpointInterval = Long.MAX_VALUE;   // 默认不启用 checkpoint
-    private int maxRestarts = 3;                         // 默认最多重启 3 次
+    /** checkpoint间隔时间，默认不启用 checkpoint */
+    private long checkpointInterval = Long.MAX_VALUE;
+    /** 重启次数，默认最多重启 3 次 */
+    private int maxRestarts = 3;
 
     public int getNewNodeId() {
         return idCounter.incrementAndGet();
     }
 
     public <T> DataStream<T> fromCollection(Iterable<T> data) {
-        java.util.List<T> list = new java.util.ArrayList<>();
+        List<T> list = new ArrayList<>();
         data.forEach(list::add);   // 转可重复遍历的 List（支持 checkpoint 重放）
         return addSource(new CollectionSource<>(list), "source");
     }

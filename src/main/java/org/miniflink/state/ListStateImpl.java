@@ -15,7 +15,7 @@ public class ListStateImpl<T> implements ListState<T> {
     @Override
     @SuppressWarnings("unchecked")
     public Iterable<T> get() {
-        List<Object> list = (List<Object>) backend.getOrCreateList(name, backend.currentKey());
+        List<Object> list = backend.getOrCreateList(name, backend.currentKey());
         return (Iterable<T>) list;
     }
 

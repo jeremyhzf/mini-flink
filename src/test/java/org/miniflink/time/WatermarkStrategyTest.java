@@ -9,7 +9,7 @@ class WatermarkStrategyTest {
     @Test
     void boundedOutOfOrdernessWatermarkEqualsMaxTsMinusAllowedLateness() {
         WatermarkStrategy<String> strategy = WatermarkStrategy
-                .<String>forBoundedOutOfOrderness(java.time.Duration.ofMillis(100), s -> Long.parseLong(s));
+                .forBoundedOutOfOrderness(java.time.Duration.ofMillis(100), Long::parseLong);
         assertEquals(Long.MIN_VALUE, strategy.currentWatermark());   // 初始
 
         strategy.extractTimestamp("1000");   // maxTs=1000
@@ -25,7 +25,7 @@ class WatermarkStrategyTest {
     /** BoundedOutOfOrdernessWatermarks.copy() 返回状态隔离的独立实例。 */
     @Test
     void boundedOutOfOrdernessCopyReturnsIsolatedInstance() {
-        BoundedOutOfOrdernessWatermarks<String> s1 = new BoundedOutOfOrdernessWatermarks<>(100, s -> Long.parseLong(s));
+        BoundedOutOfOrdernessWatermarks<String> s1 = new BoundedOutOfOrdernessWatermarks<>(100, Long::parseLong);
         s1.extractTimestamp("1000");   // s1.maxTimestamp=1000
         BoundedOutOfOrdernessWatermarks<String> s2 = s1.copy();
         assertNotSame(s1, s2);

@@ -1,10 +1,11 @@
 package org.miniflink.runtime;
 
+import org.miniflink.checkpoint.SubtaskSnapshot;
+import org.miniflink.runtime.operator.SourceOperatorImpl;
+import org.miniflink.state.StateSnapshot;
+
 import java.util.List;
 import java.util.Map;
-import org.miniflink.runtime.operator.SourceOperatorImpl;
-import org.miniflink.checkpoint.SubtaskSnapshot;
-import org.miniflink.state.StateSnapshot;
 
 /** source 执行单元：open source（注入 RuntimeContext）→ run → 正常结束广播 EOB。 */
 public class SourceTask implements Task {
@@ -40,7 +41,7 @@ public class SourceTask implements Task {
     }
 
     /** 配置源线程 checkpoint 钩子（在 open 之后调；snapshot backend + offset + ack + 发 barrier）。 */
-    @SuppressWarnings({"rawtypes", "unchecked"})
+    @SuppressWarnings({"rawtypes"})
     private void configureCheckpointEmitter(OutputCollector out) {
         if (!(sourceOperator instanceof SourceOperatorImpl impl) || coordinator == null) {
             return;
@@ -61,7 +62,7 @@ public class SourceTask implements Task {
     public void run() {
         OutputCollector out = new OutputCollector(outputs, ctx);
         try {
-            sourceOperator.open((Collector) out, ctx);
+            sourceOperator.open(out, ctx);
             // 恢复：open 先建 SourceContextImpl，restoreOffset 设 skipUntil；之后 run 重放时跳过前 offset 条。
             // 顺序：open（建 ctx）→ restoreOffset（设 skipUntil）→ configureCheckpointEmitter → run。
             if (restoreOffset >= 0) {

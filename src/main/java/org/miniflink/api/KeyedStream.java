@@ -4,6 +4,8 @@ import org.miniflink.api.function.KeySelector;
 import org.miniflink.api.function.ReduceFunction;
 import org.miniflink.execution.HashPartitioner;
 import org.miniflink.runtime.operator.ReduceOperator;
+import org.miniflink.window.Window;
+import org.miniflink.window.WindowAssigner;
 
 /**
  * keyBy 返回的流：携带 keySelector，提供 keyed 聚合操作。
@@ -25,8 +27,7 @@ public class KeyedStream<T, K> {
     }
 
     /** 按 windowAssigner 开窗，返回 WindowedStream。 */
-    public <W extends org.miniflink.window.Window> WindowedStream<T, W> window(
-            org.miniflink.window.WindowAssigner<T, W> windowAssigner) {
+    public <W extends Window> WindowedStream<T, W> window(WindowAssigner<T, W> windowAssigner) {
         return new WindowedStream<>(this, windowAssigner);
     }
 
